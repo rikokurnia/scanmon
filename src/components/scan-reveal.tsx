@@ -1,6 +1,12 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type SyntheticEvent,
+  type PointerEvent,
+} from "react";
 import type { ScanResult } from "@/lib/scan-result";
 import { resolveRevealAssets } from "@/lib/scan-result";
 import { addRevealedCard } from "@/lib/reveal-collection";
@@ -28,13 +34,20 @@ export default function ScanReveal({
   const [loaded, setLoaded] = useState<string[]>([]),
     [error, setError] = useState("");
   const skipClick = useRef(false);
+  const introTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [introDone, setIntroDone] = useState(false);
   const ready = loaded.length === 4;
+  const canPeel = ready && introDone;
+  const uncovered = canPeel && (geometry !== null || phase !== "peel");
   useEffect(() => {
-    if (ready) corner.current?.focus();
-  }, [ready]);
+    if (canPeel) corner.current?.focus();
+  }, [canPeel]);
   useEffect(() => {
     corner.current?.focus();
-    return () => cancelAnimationFrame(frame.current);
+    return () => {
+      cancelAnimationFrame(frame.current);
+      if (introTimer.current) clearTimeout(introTimer.current);
+    };
   }, []);
   function position(x: number, y: number) {
     const box = stage.current!.getBoundingClientRect();
@@ -50,7 +63,7 @@ export default function ScanReveal({
     }
   }
   function finish() {
-    if (complete.current || !ready) return;
+    if (complete.current || !canPeel) return;
     complete.current = true;
     setPhase("finishing");
     const box = stage.current!.getBoundingClientRect(),
@@ -108,10 +121,29 @@ export default function ScanReveal({
       setGeometry(null);
     }
   }
-  const onLoad = (name: string) => () =>
-    setLoaded((current) =>
-      current.includes(name) ? current : [...current, name],
+  const onLoad =
+    (name: string) => async (e: SyntheticEvent<HTMLImageElement>) => {
+      const image = e.currentTarget;
+      try {
+        await image.decode();
+      } catch {
+        if (!image.complete || !image.naturalWidth) {
+          setError("Couldn’t load the artwork. Close and try again.");
+          return;
+        }
+      }
+      setLoaded((current) =>
+        current.includes(name) ? current : [...current, name],
+      );
+    };
+  function startIntro() {
+    if (introTimer.current) return;
+    // Supplied GIF: 52 frames × 40 ms. Start its timer only after it loads.
+    introTimer.current = setTimeout(
+      () => setIntroDone(true),
+      matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 2080,
     );
+  }
   if (!assets)
     return (
       <div className="reveal-unavailable" role="alert">
@@ -129,7 +161,7 @@ export default function ScanReveal({
       }}
     >
       <section
-        className={`reveal-stage phase-${phase}`}
+        className={`reveal-stage phase-${canPeel ? phase : "summoning"}`}
         role="dialog"
         aria-modal="false"
         aria-label={
@@ -146,58 +178,95 @@ export default function ScanReveal({
         >
           ×
         </button>
-        <div ref={stage} className="reveal-canvas">
+        {!introDone && (
           <Image
-            className="split-frame"
-            src="/assets/reveal/frame.png"
+            className="reveal-starfall"
+            src="/assets/reveal/summon-starfall.gif"
             alt=""
-            fill
+            width={320}
+            height={320}
             unoptimized
-            onLoad={onLoad("frame")}
-            onError={() =>
-              setError("Couldn’t load the reveal artwork. Close and try again.")
-            }
+            loading="eager"
+            onLoad={startIntro}
+            onError={() => setIntroDone(true)}
           />
-          <div className="reveal-character">
-            <picture>
-              <source
-                media="(prefers-reduced-motion: reduce)"
-                srcSet={assets.idleSrc.replace(".gif", ".png")}
-              />
-              <Image
-                src={assets.idleSrc}
-                alt={assets.name}
-                fill
-                unoptimized
-                onLoad={onLoad("idle")}
-                onError={() =>
-                  setError(
-                    "Character artwork unavailable. Close and try again.",
-                  )
-                }
-              />
-            </picture>
-          </div>
-          <div className="reveal-card">
+        )}
+        <div ref={stage} className="reveal-canvas">
+          <div
+            className="reveal-content"
+            style={{ visibility: uncovered ? "visible" : "hidden" }}
+            aria-hidden={!uncovered}
+          >
             <Image
-              src={assets.cardImageSrc}
-              alt={`${assets.name} collectible card`}
+              className="split-frame"
+              src="/assets/reveal/frame.png"
+              alt=""
               fill
               unoptimized
-              onLoad={onLoad("card")}
+              loading="eager"
+              onLoad={onLoad("frame")}
               onError={() =>
-                setError("Card artwork unavailable. Close and try again.")
+                setError(
+                  "Couldn’t load the reveal artwork. Close and try again.",
+                )
               }
             />
+            <div className="reveal-character">
+              <picture>
+                <source
+                  media="(prefers-reduced-motion: reduce)"
+                  srcSet={assets.idleSrc.replace(".gif", ".png")}
+                />
+                <Image
+                  src={assets.idleSrc}
+                  alt={assets.name}
+                  fill
+                  unoptimized
+                  loading="eager"
+                  onLoad={onLoad("idle")}
+                  onError={() =>
+                    setError(
+                      "Character artwork unavailable. Close and try again.",
+                    )
+                  }
+                />
+              </picture>
+            </div>
+            <div className="reveal-card">
+              <div
+                className="card-surface"
+                style={{ aspectRatio: `${assets.width}/${assets.height}` }}
+              >
+                <Image
+                  src={assets.cardImageSrc}
+                  alt={`${assets.name} collectible card`}
+                  fill
+                  unoptimized
+                  loading="eager"
+                  onLoad={onLoad("card")}
+                  onError={() =>
+                    setError("Card artwork unavailable. Close and try again.")
+                  }
+                />
+                <span className="card-gloss" aria-hidden="true" />
+              </div>
+            </div>
           </div>
           {phase !== "revealed" && (
             <>
-              <div className="peel-face" style={{ clipPath: geometry?.top }}>
+              <div
+                className="peel-face"
+                style={{
+                  clipPath: geometry?.top,
+                  visibility: canPeel ? "visible" : "hidden",
+                }}
+              >
                 <Image
                   src="/assets/reveal/mystery.png"
                   alt="Mystery monster sticker with a barcode and curled upper-right corner"
                   fill
                   unoptimized
+                  loading="eager"
                   onLoad={onLoad("mystery")}
                   draggable={false}
                   onError={() =>
@@ -220,6 +289,7 @@ export default function ScanReveal({
                     alt=""
                     fill
                     unoptimized
+                    loading="eager"
                     draggable={false}
                   />
                   <span />
@@ -228,9 +298,9 @@ export default function ScanReveal({
               <button
                 ref={corner}
                 className="peel-corner"
-                disabled={!ready || phase !== "peel"}
+                disabled={!canPeel || phase !== "peel"}
                 aria-label={
-                  ready ? "Peel upper-right corner" : "Loading sticker"
+                  canPeel ? "Peel upper-right corner" : "Loading sticker"
                 }
                 onPointerDown={(e) => {
                   if (e.button !== 0) return;

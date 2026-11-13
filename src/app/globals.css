@@ -728,7 +728,7 @@ h1 {
 }
 .tomo-bubble {
   position: absolute;
-  top: 1px;
+  top: -19px;
   left: 19px;
   display: flex;
   gap: 5px;

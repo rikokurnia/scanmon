@@ -45,3 +45,26 @@ test("fold reflection maps original upper-right corner onto the dragged corner",
   assert.ok(Number.isFinite(d));
   assert.ok(!geometry.top.includes("NaN"));
 });
+
+test("barcode character mapping is stable, canonical, and reaches every supported character", () => {
+  const species = new Set<string>();
+  for (let i = 0; i < 500; i++) {
+    const body = String(400638100000 + i);
+    let sum = 0;
+    for (
+      let j = body.length - 1, weight = 3;
+      j >= 0;
+      j--, weight = weight === 3 ? 1 : 3
+    )
+      sum += Number(body[j]) * weight;
+    const code = body + String((10 - (sum % 10)) % 10),
+      result = resolveScanResult(code)!;
+    assert.ok(result);
+    assert.deepEqual(resolveScanResult(code), result);
+    assert.deepEqual(resolveScanResult(code.split("").join(" ")), result);
+    species.add(result.cardId);
+  }
+  assert.equal(species.size, 7);
+  // Lock existing v1 mappings: changing roster order must not silently remap barcodes.
+  assert.equal(resolveScanResult("4006381333931")?.cardId, "pepe");
+});

@@ -39,3 +39,26 @@ test("validated scans persist, invalid or repeated scans do not advance tasks", 
   recordScan("5901234123457");
   assert.equal(readScans(getHuntSnapshot()).length, 3);
 });
+
+test("battle task advances only from a won battle and records it once", async () => {
+  const { recordBattleTask, getBattleTaskSnapshot } =
+    await import("./hunt-progress");
+  const data = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => data.get(k) ?? null,
+      setItem: (k: string, v: string) => data.set(k, v),
+    },
+  });
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: new EventTarget(),
+  });
+  recordBattleTask({ id: "raid:1", phase: "choosing" });
+  recordBattleTask({ id: "raid:1", phase: "lost" });
+  assert.equal(getBattleTaskSnapshot(), "");
+  recordBattleTask({ id: "raid:1", phase: "won" });
+  recordBattleTask({ id: "raid:2", phase: "won" });
+  assert.equal(getBattleTaskSnapshot(), "raid:1");
+});

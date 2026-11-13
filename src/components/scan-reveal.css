@@ -178,3 +178,90 @@
 .reveal-layer {
   overflow: clip;
 }
+/* Nothing identifying the character may paint until the decoded mystery is ready. */
+.reveal-content {
+  position: absolute;
+  inset: 0;
+}
+.phase-summoning .reveal-canvas {
+  visibility: hidden;
+  pointer-events: none;
+}
+.reveal-starfall {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(85vw, 320px);
+  height: auto;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.card-surface {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 100%;
+  max-width: 100%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  border-radius: 5%;
+  isolation: isolate;
+}
+.card-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.card-gloss:after {
+  content: "";
+  position: absolute;
+  inset: -30% -80%;
+  background: linear-gradient(
+    110deg,
+    transparent 34%,
+    #fff3 42%,
+    #fff9 48%,
+    #d5ffff70 51%,
+    transparent 60%
+  );
+  transform: translateX(-65%);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-stage {
+    animation: none;
+  }
+  .phase-peel .reveal-canvas {
+    animation: sticker-rise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .phase-revealed .card-gloss:after {
+    animation: foil-gloss 3.8s ease-in-out infinite;
+  }
+  @keyframes foil-gloss {
+    0%,
+    12% {
+      transform: translateX(-65%);
+      opacity: 0;
+    }
+    22% {
+      opacity: 0.7;
+    }
+    47% {
+      transform: translateX(65%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(65%);
+      opacity: 0;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-starfall,
+  .card-gloss {
+    display: none;
+  }
+}

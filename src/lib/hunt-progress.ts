@@ -48,3 +48,23 @@ export function subscribeHunt(callback: () => void) {
     window.removeEventListener("storage", callback);
   };
 }
+
+const WIN_KEY = "scanmon:hunt:first-win:v1";
+export function getBattleTaskSnapshot(): string {
+  try {
+    return localStorage.getItem(WIN_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+/** Only a won result supplied by the connected Battle adapter advances this task. */
+export function recordBattleTask(result: { id: string; phase: string }) {
+  if (result.phase !== "won" || !result.id.trim() || getBattleTaskSnapshot())
+    return;
+  try {
+    localStorage.setItem(WIN_KEY, result.id);
+    window.dispatchEvent(new Event(EVENT));
+  } catch {
+    /* No false completion if storage is unavailable. */
+  }
+}

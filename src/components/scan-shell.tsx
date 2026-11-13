@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { useScanner } from "./use-scanner";
+import BattleTaskSync from "./battle-task-sync";
 import ScanReveal from "./scan-reveal";
 import TomoCompanion from "./tomo-companion";
 const tabs = [
@@ -51,9 +52,12 @@ function Art({
 export default function ScanShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   return (
-    <ShellContent key={path} path={path}>
-      {children}
-    </ShellContent>
+    <>
+      <BattleTaskSync />
+      <ShellContent key={path} path={path}>
+        {children}
+      </ShellContent>
+    </>
   );
 }
 function ShellContent({

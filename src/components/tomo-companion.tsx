@@ -1,7 +1,13 @@
 "use client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useRef, useState, useSyncExternalStore } from "react";
-import { getHuntSnapshot, readScans, subscribeHunt } from "@/lib/hunt-progress";
+import {
+  getHuntSnapshot,
+  getBattleTaskSnapshot,
+  readScans,
+  subscribeHunt,
+} from "@/lib/hunt-progress";
 export function TokenIcon({ token }: { token: "near" | "usdc" }) {
   return (
     <Image
@@ -14,6 +20,12 @@ export function TokenIcon({ token }: { token: "near" | "usdc" }) {
   );
 }
 export default function TomoCompanion({ onScan }: { onScan: () => void }) {
+  const router = useRouter();
+  const firstWin = useSyncExternalStore(
+    subscribeHunt,
+    getBattleTaskSnapshot,
+    () => "",
+  );
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"tasks" | "about">("tasks");
   const tasksRef = useRef<HTMLButtonElement>(null);
@@ -35,7 +47,7 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
       id: "battle",
       title: "Win your first battle",
       goal: 1,
-      count: 0,
+      count: firstWin ? 1 : 0,
       reward: 2,
     },
   ];
@@ -166,10 +178,12 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                         ) : battle ? (
                           <button
                             className="task-action"
-                            disabled
-                            title="Battle is not available in this build"
+                            onClick={() => {
+                              close();
+                              router.push("/battle");
+                            }}
                           >
-                            Soon
+                            Go to Battle
                           </button>
                         ) : (
                           <button

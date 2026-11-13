@@ -7,7 +7,8 @@ export interface ScanResult {
 }
 // Frontend-only roster v1. Replace this resolver with the scan service when connected.
 // Doge and the boss have no supplied front-idle artwork and are not in this roster.
-const roster: CardId[] = [
+// Stable v1 ordering: never reorder this list without an explicit season migration.
+const roster: readonly CardId[] = Object.freeze([
   "nyan-cat",
   "pikachu",
   "gengar",
@@ -15,7 +16,7 @@ const roster: CardId[] = [
   "veemon",
   "piyomon",
   "chill-guy",
-];
+]);
 export function resolveScanResult(input: string): ScanResult | null {
   const valid = validateBarcode(input);
   if (!valid) return null;
