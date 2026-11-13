@@ -20,12 +20,20 @@ const MAX_TILT_DEG = 10;
 function ReflectiveCardFrame({
   asset,
   priority,
+  onSwipeNavigate,
 }: {
   asset: CardAssetEntry;
   priority: boolean;
+  onSwipeNavigate: (direction: "prev" | "next") => void;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const tiltRafRef = useRef<number | null>(null);
+  const touchGestureRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startTime: number;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -68,6 +76,7 @@ function ReflectiveCardFrame({
       window.cancelAnimationFrame(tiltRafRef.current);
       tiltRafRef.current = null;
     }
+    touchGestureRef.current = null;
     const frame = frameRef.current;
     if (!frame) return;
     delete frame.dataset.tilting;
@@ -82,17 +91,53 @@ function ReflectiveCardFrame({
     <div
       ref={frameRef}
       className="collection-card-frame"
+      onPointerDown={(e) => {
+        if (e.pointerType === "touch") {
+          touchGestureRef.current = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            startTime: performance.now(),
+          };
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }
+        updateTilt(e.clientX, e.clientY);
+      }}
       onPointerEnter={(e) => {
         if (e.pointerType !== "touch") {
           updateTilt(e.clientX, e.clientY);
         }
       }}
       onPointerMove={(e) => {
+        if (
+          e.pointerType === "touch" &&
+          touchGestureRef.current?.pointerId !== e.pointerId
+        ) {
+          return;
+        }
+        updateTilt(e.clientX, e.clientY);
+      }}
+      onPointerUp={(e) => {
+        const gesture = touchGestureRef.current;
+        if (e.pointerType === "touch" && gesture?.pointerId === e.pointerId) {
+          const dx = e.clientX - gesture.startX;
+          const dy = e.clientY - gesture.startY;
+          const elapsed = performance.now() - gesture.startTime;
+          if (
+            elapsed < 350 &&
+            Math.abs(dx) > 55 &&
+            Math.abs(dx) > Math.abs(dy) * 1.4
+          ) {
+            onSwipeNavigate(dx < 0 ? "next" : "prev");
+          }
+        }
+        resetTilt();
+      }}
+      onPointerLeave={(e) => {
         if (e.pointerType !== "touch") {
-          updateTilt(e.clientX, e.clientY);
+          resetTilt();
         }
       }}
-      onPointerLeave={resetTilt}
       onPointerCancel={resetTilt}
     >
       <Image
@@ -105,6 +150,7 @@ function ReflectiveCardFrame({
         unoptimized
         draggable={false}
       />
+      <div className="collection-card-idle-shine" aria-hidden="true" />
       <div className="collection-card-foil" aria-hidden="true" />
       <div className="collection-card-gloss" aria-hidden="true" />
       <div className="collection-card-rim" aria-hidden="true" />
@@ -339,9 +385,24 @@ export default function CollectionScreen({
 
   const atStart = safeIndex <= 0;
   const atEnd = safeIndex >= total - 1;
+  const activeCard = resolvedCards[safeIndex];
 
   return (
     <div className="collection-screen">
+      {activeCard && (
+        <div className="collection-backdrop" aria-hidden="true">
+          <Image
+            key={activeCard.asset.id}
+            src={activeCard.asset.cardImageSrc}
+            alt=""
+            width={activeCard.asset.width}
+            height={activeCard.asset.height}
+            className="collection-backdrop-image"
+            unoptimized
+          />
+          <div className="collection-backdrop-scrim" />
+        </div>
+      )}
       <section
         className="collection-carousel"
         aria-roledescription="carousel"
@@ -387,6 +448,11 @@ export default function CollectionScreen({
                 <ReflectiveCardFrame
                   asset={card.asset}
                   priority={index === 0}
+                  onSwipeNavigate={(direction) =>
+                    scrollToIndex(
+                      direction === "next" ? safeIndex + 1 : safeIndex - 1,
+                    )
+                  }
                 />
               </div>
             ))}
