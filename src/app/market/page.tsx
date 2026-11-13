@@ -1,3 +1,5 @@
-export default function Page() {
-  return null;
+import MarketScreen from "./market-screen";
+
+export default function MarketPage() {
+  return <MarketScreen />;
 }

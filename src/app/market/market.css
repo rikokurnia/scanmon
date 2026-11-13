@@ -1,0 +1,816 @@
+/* Approved Pocket Arcade market references govern this Market-only layout and theme. */
+
+.app-shell:has(.market-screen) {
+  min-height: 100svh;
+  min-height: 100dvh;
+  background: #3d1d0b;
+}
+
+.app-shell:has(.market-screen) > .app-header {
+  display: none;
+}
+
+.app-shell:has(.market-screen) > .blank-main {
+  padding-top: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.app-shell:has(.market-screen) > .bottom-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin-top: auto;
+}
+
+.app-shell:has(.market-screen) .nav-tab.active {
+  background: linear-gradient(180deg, #98f7da 0%, #6ceec6 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffff90,
+    0 1px 0 #19254618;
+}
+
+.market-screen {
+  --market-cream: #fff6e0;
+  --market-cream-bright: #fffdf5;
+  --market-mint: #76f2cb;
+  --market-mint-deep: #28d6a0;
+  --market-wood-dark: #3d1d0b;
+  --market-wood-mid: #4e2812;
+  --market-navy: var(--navy, #192546);
+  --market-yellow: var(--yellow, #ffd34e);
+
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  background: linear-gradient(
+    180deg,
+    #4c2610 0%,
+    #45210d 55%,
+    #391a09 100%
+  );
+  color: var(--market-navy);
+  overflow-x: clip;
+}
+
+/* Full-bleed Koban shop video & reduced-motion still background */
+.market-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 177.78cqw;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.market-video,
+.market-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.market-still {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-video {
+    display: none;
+  }
+
+  .market-still {
+    display: block;
+  }
+}
+
+/* Upper shop stage preserves Koban's scale and original counter lip height */
+.market-upper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 98cqw;
+  flex: none;
+  pointer-events: none;
+}
+
+/* Single speech bubble lifted cleanly above Koban's head */
+.koban-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 67.5cqw;
+  transform: translateX(-50%);
+  width: min(82cqw, 326px);
+  max-height: 27cqw;
+  padding: 10px 15px;
+  border: 3px solid var(--market-navy);
+  border-radius: 26px;
+  background: var(--market-cream-bright);
+  box-shadow: 0 3px 0 rgba(25, 37, 70, 0.25);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.koban-bubble::before {
+  content: "";
+  position: absolute;
+  left: 56%;
+  bottom: -13px;
+  width: 16px;
+  height: 14px;
+  background: var(--market-navy);
+  clip-path: polygon(10% 0, 100% 0, 0 100%);
+}
+
+.koban-bubble::after {
+  content: "";
+  position: absolute;
+  left: calc(56% + 2.5px);
+  bottom: -8px;
+  width: 11px;
+  height: 10px;
+  background: var(--market-cream-bright);
+  clip-path: polygon(10% 0, 100% 0, 0 100%);
+}
+
+.koban-bubble-text {
+  margin: 0;
+  font-family: "Nunito", sans-serif;
+  font-size: clamp(12.5px, 3.6cqw, 15px);
+  font-weight: 900;
+  line-height: 1.24;
+  color: var(--market-navy);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.koban-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #3f4f6b;
+  font-size: clamp(12.5px, 3.5cqw, 14px);
+  font-weight: 900;
+}
+
+.koban-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.koban-thinking-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--market-mint-deep);
+  border: 1.5px solid var(--market-navy);
+  display: inline-block;
+}
+
+.koban-typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.14em;
+  border-radius: 2px;
+  background: var(--market-mint-deep);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .koban-typing-cursor {
+    animation: koban-caret 0.7s steps(2, start) infinite;
+  }
+
+  @keyframes koban-caret {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+/* Lower counter workspace */
+.market-lower {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 14px 10px;
+}
+
+/* Top bar directly below counter lip */
+.market-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+
+.market-picker-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.market-title {
+  margin: 0;
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: clamp(23px, 6.4cqw, 28px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  color: #fffdf6;
+  text-shadow:
+    0 2px 0 var(--market-navy),
+    0 -1px 0 var(--market-navy),
+    2px 0 0 var(--market-navy),
+    -2px 0 0 var(--market-navy),
+    0 4px 10px rgba(15, 7, 2, 0.55);
+}
+
+.market-back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.market-back-face {
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid var(--market-navy);
+  border-radius: 50%;
+  background: var(--market-cream);
+  color: var(--market-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 0 rgba(25, 37, 70, 0.28);
+}
+
+.market-back-button:active .market-back-face {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(25, 37, 70, 0.28);
+}
+
+/* Segmented Buy / Sell pill toggle */
+.direction-toggle {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  min-width: 196px;
+  padding: 2px;
+  border: 3px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-cream);
+  box-shadow: 0 2px 0 rgba(16, 10, 4, 0.35);
+}
+
+.direction-tab {
+  min-height: 36px;
+  min-width: 90px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--market-navy);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  transition: background-color 140ms ease-out;
+}
+
+.direction-tab.is-active {
+  background: linear-gradient(180deg, #98f7da 0%, #69ecc4 100%);
+  box-shadow: inset 0 1px 0 #ffffff85;
+}
+
+/* Browsing catalog / inventory 2-column grid */
+.market-grid-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.market-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 2px 6px 14px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #8c5530 transparent;
+  max-height: clamp(220px, 44dvh, 420px);
+}
+
+.market-card-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  transition: transform 140ms ease-out;
+}
+
+.market-card-button:focus-visible {
+  outline: 3px solid var(--market-mint);
+  outline-offset: 3px;
+}
+
+.market-card-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.market-card-button:disabled {
+  cursor: not-allowed;
+}
+
+.market-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 5px 12px rgba(13, 6, 2, 0.45);
+}
+
+.market-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.market-card-button.is-unavailable .market-card-img {
+  filter: grayscale(0.45) brightness(0.76);
+}
+
+.market-card-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 2px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-cream);
+  color: var(--market-navy);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.1;
+  box-shadow: 0 2px 0 rgba(25, 37, 70, 0.35);
+}
+
+.market-scroll-cue {
+  align-self: center;
+  margin-top: 2px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.market-scroll-cue-face {
+  width: 34px;
+  height: 26px;
+  border: 2.5px solid var(--market-mint);
+  border-radius: 8px;
+  background: rgba(25, 37, 70, 0.82);
+  color: var(--market-mint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(10, 5, 2, 0.45);
+}
+
+/* Empty & status states inside counter */
+.market-empty-state {
+  margin: 10px auto 0;
+  width: min(100%, 300px);
+  padding: 18px 16px;
+  border: 3px solid var(--market-navy);
+  border-radius: 20px;
+  background: var(--market-cream);
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(16, 8, 2, 0.35);
+}
+
+.market-empty-title {
+  margin: 0 0 4px;
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--market-navy);
+}
+
+.market-empty-copy {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #46546d;
+}
+
+.market-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 18px;
+  border: 2.5px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-yellow);
+  color: var(--market-navy);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 2px 0 var(--market-navy);
+}
+
+.market-inline-status {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--market-navy);
+  border-radius: 12px;
+  background: var(--market-cream);
+  color: var(--market-navy);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Negotiation view: card left, offer panel right, input bar below */
+.market-negotiation {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.negotiation-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.negotiation-card-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.negotiation-card-frame {
+  width: 100%;
+  max-width: 172px;
+  aspect-ratio: 5 / 7;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 14px rgba(12, 5, 2, 0.5);
+}
+
+.negotiation-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Compact cream offer panel (Koban's offer only — no "Your offer") */
+.offer-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 12px;
+  border: 3px solid var(--market-navy);
+  border-radius: 20px;
+  background: var(--market-cream-bright);
+  box-shadow: 0 5px 14px rgba(15, 7, 2, 0.42);
+  min-width: 0;
+}
+
+.offer-panel-label {
+  margin: 0;
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: clamp(15px, 4.1cqw, 17px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--market-navy);
+}
+
+.offer-amount-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.offer-direction-tag {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dff8ee;
+  border: 1.5px solid #1e9e75;
+  color: #0e4a38;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.offer-direction-tag.is-buy {
+  background: #fff0c2;
+  border-color: #b77e12;
+  color: #5a3a00;
+}
+
+.offer-amount-value {
+  margin: 0;
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: clamp(22px, 6.2cqw, 27px);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--market-navy);
+}
+
+.offer-status-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #46546d;
+}
+
+.offer-status-text.is-error {
+  color: #9e222a;
+}
+
+.offer-status-text.is-success {
+  color: #0f684c;
+}
+
+.offer-retry-button {
+  align-self: flex-start;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 2px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-cream);
+  color: var(--market-navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.accept-offer-button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 6px 12px;
+  border: 2.5px solid var(--market-navy);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe270 0%, #ffd038 100%);
+  color: var(--market-navy);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: clamp(16px, 4.4cqw, 18px);
+  font-weight: 800;
+  line-height: 1.1;
+  box-shadow:
+    0 2px 0 var(--market-navy),
+    inset 0 2px 0 #fff7c2;
+  transition: transform 140ms ease-out, box-shadow 140ms ease-out;
+}
+
+.accept-offer-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--market-navy);
+}
+
+.accept-offer-button:disabled {
+  background: #ede4ca;
+  color: #6b7280;
+  border-color: rgba(25, 37, 70, 0.35);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.market-done-button {
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 2.5px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-mint);
+  color: var(--market-navy);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 2px 0 var(--market-navy);
+}
+
+/* Composer bar above navbar */
+.market-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 5px 4px 14px;
+  border: 3px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-cream-bright);
+  box-shadow: 0 3px 8px rgba(14, 6, 2, 0.35);
+  scroll-margin-bottom: 16px;
+}
+
+.market-composer-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--market-navy);
+  font-size: max(1rem, 16px);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.market-composer-input::placeholder {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.market-composer-input:focus-visible {
+  outline: none;
+}
+
+.market-composer:focus-within {
+  outline: 3px solid var(--market-mint);
+  outline-offset: 2px;
+}
+
+.market-send-button {
+  flex: none;
+  width: 50px;
+  height: 44px;
+  padding: 0;
+  border: 2.5px solid var(--market-navy);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe270 0%, #ffd038 100%);
+  color: var(--market-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 0 var(--market-navy);
+}
+
+.market-send-button:disabled {
+  background: #ede4ca;
+  color: #7c8494;
+  border-color: rgba(25, 37, 70, 0.3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.visually-hidden {
+  position: absolute;
+  clip-path: inset(50%);
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+/* Short phones (e.g. 360x640) and mobile keyboard open */
+@media (max-height: 680px) {
+  .market-backdrop {
+    top: -11cqw;
+  }
+
+  .market-upper {
+    height: 87cqw;
+  }
+
+  .koban-bubble {
+    bottom: 56.5cqw;
+  }
+
+  .market-lower {
+    padding: 0 12px 6px;
+  }
+
+  .market-picker-header {
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .market-toolbar {
+    min-height: 36px;
+    margin-bottom: 2px;
+  }
+
+  .direction-tab {
+    min-height: 32px;
+    font-size: 15px;
+  }
+
+  .negotiation-card-frame {
+    max-width: 90px;
+  }
+
+  .offer-panel {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+
+  .market-negotiation {
+    gap: 5px;
+  }
+
+  .market-composer {
+    padding: 2px 4px 2px 12px;
+  }
+
+  .market-composer-input {
+    min-height: 36px;
+  }
+}
+
+@media (max-height: 540px) {
+  .app-shell:has(.market-screen) > .bottom-nav {
+    position: static;
+  }
+
+  .market-backdrop {
+    top: 0;
+  }
+
+  .market-upper {
+    height: 98cqw;
+  }
+
+  .koban-bubble {
+    bottom: 67.5cqw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .direction-tab,
+  .market-card-button,
+  .accept-offer-button {
+    transition: none;
+  }
+}
