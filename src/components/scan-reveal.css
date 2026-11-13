@@ -32,6 +32,7 @@
   top: 11%;
   width: 39%;
   height: 77%;
+  transform: scale(1.35);
 }
 .reveal-card {
   position: absolute;
