@@ -15,6 +15,103 @@ interface ResolvedOwnedCard {
   asset: CardAssetEntry;
 }
 
+const MAX_TILT_DEG = 10;
+
+function ReflectiveCardFrame({
+  asset,
+  priority,
+}: {
+  asset: CardAssetEntry;
+  priority: boolean;
+}) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const tiltRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tiltRafRef.current !== null) {
+        window.cancelAnimationFrame(tiltRafRef.current);
+      }
+    };
+  }, []);
+
+  const updateTilt = (clientX: number, clientY: number) => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const rect = frame.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const rx = ((0.5 - py) * 2 * MAX_TILT_DEG).toFixed(2);
+    const ry = ((px - 0.5) * 2 * MAX_TILT_DEG).toFixed(2);
+
+    if (tiltRafRef.current !== null) {
+      window.cancelAnimationFrame(tiltRafRef.current);
+    }
+
+    tiltRafRef.current = window.requestAnimationFrame(() => {
+      tiltRafRef.current = null;
+      frame.dataset.tilting = "true";
+      frame.style.setProperty("--rx", `${rx}deg`);
+      frame.style.setProperty("--ry", `${ry}deg`);
+      frame.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
+      frame.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
+      frame.style.setProperty("--glare-opacity", "1");
+    });
+  };
+
+  const resetTilt = () => {
+    if (tiltRafRef.current !== null) {
+      window.cancelAnimationFrame(tiltRafRef.current);
+      tiltRafRef.current = null;
+    }
+    const frame = frameRef.current;
+    if (!frame) return;
+    delete frame.dataset.tilting;
+    frame.style.setProperty("--rx", "0deg");
+    frame.style.setProperty("--ry", "0deg");
+    frame.style.setProperty("--mx", "50%");
+    frame.style.setProperty("--my", "50%");
+    frame.style.setProperty("--glare-opacity", "0");
+  };
+
+  return (
+    <div
+      ref={frameRef}
+      className="collection-card-frame"
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "touch") {
+          updateTilt(e.clientX, e.clientY);
+        }
+      }}
+      onPointerMove={(e) => {
+        if (e.pointerType !== "touch") {
+          updateTilt(e.clientX, e.clientY);
+        }
+      }}
+      onPointerLeave={resetTilt}
+      onPointerCancel={resetTilt}
+    >
+      <Image
+        src={asset.cardImageSrc}
+        alt={`${asset.name} scanMon card`}
+        width={asset.width}
+        height={asset.height}
+        className="collection-card-image"
+        priority={priority}
+        unoptimized
+        draggable={false}
+      />
+      <div className="collection-card-foil" aria-hidden="true" />
+      <div className="collection-card-gloss" aria-hidden="true" />
+      <div className="collection-card-rim" aria-hidden="true" />
+    </div>
+  );
+}
+
 function ChevronIcon({ direction }: { direction: "prev" | "next" }) {
   return (
     <svg
@@ -287,18 +384,10 @@ export default function CollectionScreen({
                 aria-roledescription="slide"
                 aria-label={`${index + 1} of ${total}: ${card.asset.name}`}
               >
-                <div className="collection-card-frame">
-                  <Image
-                    src={card.asset.cardImageSrc}
-                    alt={`${card.asset.name} scanMon card`}
-                    width={card.asset.width}
-                    height={card.asset.height}
-                    className="collection-card-image"
-                    priority={index === 0}
-                    unoptimized
-                    draggable={false}
-                  />
-                </div>
+                <ReflectiveCardFrame
+                  asset={card.asset}
+                  priority={index === 0}
+                />
               </div>
             ))}
           </div>
