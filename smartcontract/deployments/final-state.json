@@ -1,0 +1,9 @@
+{
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "deployedCodeMatchesSourceBuild": true,
+  "codeHash": "5JQHKZa5vjxszfqvfz1r6ivGym3TAGti6SuRHPGZD1EQ",
+  "lookupReturnsOriginalTradedOwner": "scanmon-bob-mwevvmal.testnet",
+  "tomoBudget": "492000000",
+  "kobanBudget": "501718180",
+  "distributed": "8000000"
+}

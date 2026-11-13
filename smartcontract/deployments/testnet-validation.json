@@ -1,0 +1,184 @@
+{
+  "network": "testnet",
+  "validatedAt": "2026-11-13T11:57:39.886Z",
+  "success": true,
+  "checks": [
+    "one discovery per canonical barcode",
+    "three independent owned cards",
+    "quest reward cannot be paid twice",
+    "quest shards are on-chain",
+    "mock faucet is one-time",
+    "merchant buy debits exact six-decimal USDC",
+    "merchant sale delivers USDC and removes sold token",
+    "incorrect-price buy refunds all USDC",
+    "NEP-245 failed receiver restores ownership",
+    "listed card leaves playable collection",
+    "two-account player settlement transfers card and credits seller",
+    "sold listing cannot be cancelled twice",
+    "player sale proceeds withdraw to actual NEP-141 wallet",
+    "listing cancellation returns escrowed card",
+    "raid locks prevent selling an active team card",
+    "authoritative raid reaches victory",
+    "raid loot is paid once with on-chain shards",
+    "raid loot cannot be claimed twice",
+    "login sponsor funds real NEAR implicit account",
+    "on-chain sponsorship guard prevents duplicate grants"
+  ],
+  "receipts": [
+    {
+      "step": "mint_scan",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "6trjD2PF6JrDwQAqMTihTirWyypSsgSeh1v7X63UTZy5"
+    },
+    {
+      "step": "mint_scan",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "HrYjaP1xLtHMGJxZS8iA7YAmeymMwPqXrXoEFVVriZHk"
+    },
+    {
+      "step": "mint_scan",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "BiZ4aBB8zMiLdBuhedUMgNSxY71nqZZ5CRrPXFCUHEWJ"
+    },
+    {
+      "step": "mint_scan",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "FWGav6Ls1KS8mM4dBtcw3cTDacCAVgC6cVfgj6vDfcjV"
+    },
+    {
+      "step": "claim_task",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "BxHUHTohcQ5x8jphitFKmriQG5LNtfyHwmhBYkcnYjQJ"
+    },
+    {
+      "step": "faucet",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "CxUwpqdRYkWEEeDEm9AGwnfZttFifc23LQHcFfd5js3J"
+    },
+    {
+      "step": "ft_transfer_call",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "HdXxWd61i7RLCP3KrJukVeWsgMnDPBkUGRhkG4TzyAQR"
+    },
+    {
+      "step": "sell_to_koban",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "GmDjf59zW95ZgSWFQSoppy2GSNZ4xRccVryia4RtaGNa"
+    },
+    {
+      "step": "ft_transfer_call",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "F8f1wvvQiq1wc2b2sZzg8hYaQddxtiaxgZAFQrgT9QLm"
+    },
+    {
+      "step": "mt_transfer_call",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "A2cZ9hDTiZuEhbtMDh3eDgweWjpYgfbjd66nBg2DvyJi"
+    },
+    {
+      "step": "list_card",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "52jpocCQkech7b7ejEph1JeXtokM3xatcLieSGdPG712"
+    },
+    {
+      "step": "ft_transfer_call",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "DVPJnkK7G33eATRmnbbr6EdNufQhqSgF751rSj2hffMf"
+    },
+    {
+      "step": "cancel_listing",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "32qsxTStDBBqYBTyLxMRvreyRaTopyu1kWuv58exvFVK"
+    },
+    {
+      "step": "withdraw_usdc",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "3SKpTvuLkCFZewyqTntcihgLi2f5VcrUodXejjQCVBRA"
+    },
+    {
+      "step": "list_card",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "CNdz8qa5w3V7VxCJR7c4Rvf6PoqVTjCQzazUH4irR7MS"
+    },
+    {
+      "step": "cancel_listing",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "2mt1a5kPpSzHcVcJxmqgQzdHy3HCCTLPjhrsNgCrUe4X"
+    },
+    {
+      "step": "mint_scan",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "CN4eJgpMdeuUfRFgz4d4GoYd9eD325xerRQcavT42khE"
+    },
+    {
+      "step": "start_raid",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "j2n18R8AVx83dJEcFVKu98nn5RqNcuVKaA5siL3nLSQ"
+    },
+    {
+      "step": "sell_to_koban",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "5wJtR9gdvfZyKWP3gWsubs4a2uPwwJzapTz2hQSJ4j4S"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "DTQqtwbiXrsz5dNCyfabS6QNoFhRcqT28n6RzcxXAFYs"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "5PpWgVAB7KZxigtNYLmCXWaYSseBPFrmSxTPHvRq3XQh"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "ASWbmKsBeV5BJadvZ4zcFvzUfTepGQGG3JJ8RPXpJnMB"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "CAiB8p4tXiMamUpK77sQk9safnQv2ApkkeRbbXd8bkE6"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "EkkSd9oHdZALmgfgi6pHTLmcZxnGNUELzLfTL7rdxce2"
+    },
+    {
+      "step": "attack",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "5pjrZWRiPNqZZXXsKy6WvFsemqPzfEerokizk77b1uTt"
+    },
+    {
+      "step": "claim_loot",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "AYsLTTMCJ8zBwzttGJnA91gZjq6Yeeuah2oHhM9vaygD"
+    },
+    {
+      "step": "claim_loot",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "4t1r5uCc4ENUt63se717kYsTxoa7zpycjpkUkq7BLEN7"
+    },
+    {
+      "step": "claim_task",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "5cZHSfRqhKcq59i9HH6TrfMc1k8dhVyWCqBjN9tvPEQL"
+    },
+    {
+      "step": "sponsor_player",
+      "account": "sponsor.scanmon-6f49a2b600.testnet",
+      "hash": "AcMAR8JaMwsuHR2DfgEUNtQSxFbN9PXFJhTuyRyo84Zn"
+    },
+    {
+      "step": "sponsor_player",
+      "account": "sponsor.scanmon-6f49a2b600.testnet",
+      "hash": "61SNzaaU92reavUz2xDofvaoLUD7ujvBAmpVfJKFhmus"
+    },
+    {
+      "step": "sponsor_player",
+      "account": "sponsor.scanmon-6f49a2b600.testnet",
+      "hash": "3CGzTtdjLZgwixAao6j5hQuXEse5ZWBqv5iqeMSTwWzX"
+    }
+  ]
+}

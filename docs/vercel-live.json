@@ -1,0 +1,40 @@
+{
+  "url": "https://scannmon.vercel.app",
+  "deploymentId": "dpl_7UhfvHRS3yjivuv4YXMMmdGywtVr",
+  "status": "READY",
+  "target": "production",
+  "framework": "Next.js",
+  "nodeVersion": "26.x",
+  "cliVersion": "65.15.0",
+  "authenticatedAs": "rikokurnia",
+  "guidance": {
+    "plugin": "vercel@openai-curated",
+    "scope": "user",
+    "installed": true,
+    "reloadForNewCommands": true
+  },
+  "mcp": {
+    "url": "https://mcp.vercel.com",
+    "scope": "global",
+    "configured": true,
+    "authentication": "Pending separate OAuth; CLI used for deployment",
+    "authenticatedListTeamsVerified": false
+  },
+  "environmentVariablesConfigured": 10,
+  "verification": {
+    "publicAccess": true,
+    "routes": [
+      "/",
+      "/scan",
+      "/collection",
+      "/market",
+      "/battle",
+      "/battle/team",
+      "/battle/arena"
+    ],
+    "historyRows": 25,
+    "unauthenticatedSponsorStatus": 401,
+    "envFilesExcludedFromUpload": true
+  },
+  "verifiedAt": "2026-11-13T12:32:45.309Z"
+}

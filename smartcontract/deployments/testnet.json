@@ -1,0 +1,15 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "usdcContractId": "usdc.scanmon-6f49a2b600.testnet",
+  "tomoAccountId": "tomo.scanmon-6f49a2b600.testnet",
+  "kobanAccountId": "koban.scanmon-6f49a2b600.testnet",
+  "sponsorAccountId": "sponsor.scanmon-6f49a2b600.testnet",
+  "deployedAt": "2026-11-13T11:57:44.519Z",
+  "transactions": [
+    {
+      "step": "Deploy game",
+      "hash": "7Cc4FwvTfJTR7LL8AAL62nS8SHRMBXVoTtWw75SmKEuY"
+    }
+  ]
+}

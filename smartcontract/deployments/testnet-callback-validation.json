@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "validatedAt": "2026-11-13T12:05:40.994Z",
+  "transactionHash": "GMUaEsRCimZgkkch9aFdray8z28Qn5UM1FdcauFMnwML",
+  "callbackResult": false,
+  "emittedFailureEvent": true,
+  "checks": [
+    "failed USDC payout callback returns false",
+    "failed payout releases claim and mints no shards",
+    "failed payout restores finite treasury"
+  ],
+  "recoveryTransactionHash": "9o5fs2JciV6uumSGjUtVA5EnqoRm1tbHFyS3WhF6P7JU"
+}

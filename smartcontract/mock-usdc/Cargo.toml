@@ -1,0 +1,12 @@
+[package]
+name = "scanmon-mock-usdc"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+borsh.workspace = true

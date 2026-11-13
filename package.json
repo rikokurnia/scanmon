@@ -8,7 +8,11 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/lib/*.test.ts"
+    "test": "tsx --test src/lib/*.test.ts src/lib/near/*.test.ts src/app/collection/*.test.ts src/app/market/*.test.ts src/app/battle/*.test.ts",
+    "contract:build": "RUSTFLAGS='-C target-cpu=mvp' cargo build --manifest-path smartcontract/Cargo.toml --target wasm32-unknown-unknown --release",
+    "contract:test": "cargo test --manifest-path smartcontract/Cargo.toml -p scanmon-game --lib",
+    "contract:deploy": "node scripts/deploy-contracts.mjs",
+    "test:integration": "node scripts/test-testnet.mjs"
   },
   "dependencies": {
     "@fontsource/baloo-2": "^5.3.0",

@@ -1,44 +1,46 @@
-# scanMon — Scan frontend
+# scanMon
 
-Mobile-first Next.js App Router, React, TypeScript, and CSS implementation. All supplied PNG artwork is preserved under `public/assets`. `scanMenu.png` is reference-only and is never rendered in the UI. Fonts are served locally.
+Live app: https://scannmon.vercel.app
 
-## Run
+A mobile-first barcode monster game on **NEAR testnet**. Scan and reveal a discovery, mint a NEP-245 card, collect a team, fight the raid boss, claim Tomo rewards, and trade with Koban or other hunters using **USDC.mock**.
 
-```sh
-npm install
+## Run locally
+
+```bash
+npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Phone camera access requires an HTTPS deployment (or localhost on the phone itself).
+Use the existing ignored `.env` and `.env.local`, or copy `.env.example` and supply your own credentials. Open `http://localhost:3000`. A deployed phone camera needs HTTPS. Camera frames remain on-device; the current Scan screen uses the camera, with retry handling for camera errors.
 
-## Scope
+## What is connected
 
-- `/` and `/scan`: rear-camera EAN-8, EAN-13, UPC-A and UPC-E decoding via ZXing, checksum validation, permission/error recovery, tap-to-start camera access and labeled manual fallback in Help. The yellow scan-again button appears only after validation.
-- `/collection`, `/battle`, `/market`: shared header/navigation with blank content.
-- No discovery rewards, minting, collection changes, wallets, or backend calls.
-- Camera frames stay on-device. A decoded frame is retained in memory for feedback and cleared on restart/navigation. Decoding pauses after success while the camera remains live; tracks stop on navigation and when the page is hidden.
-- ZXing 1D result points are scan-line endpoints rather than reliable full barcode bounds, so the mint guide remains centered.
-- Daily Hunt is an invitation; no fabricated progression count is displayed.
+- **Google + NEAR wallets:** Privy creates and signs for NEAR implicit wallets. HERE, Meteor and MyNearWallet use NEAR Wallet Selector. Settings shows account ID, native NEAR, wallet USDC, Shards, and withdrawable player-sale credit.
+- **Scan / Collection:** contract checksum validation and a stable season roster; one discovery per account/barcode. Collection only displays chain-owned cards, including after a trade or reload.
+- **Tomo:** contract-verified tasks, finite funded reward budget, actual agent account and balances, and confirmed Explorer receipts.
+- **Market:** contract-priced Koban inventory and finite buying budget, escrowed sales, player listings/cancellation, atomic purchase settlement, and USDC withdrawals.
+- **Battle:** three owned cards, on-chain rounds and HP, active-team transfer locks, and once-per-day USDC + Shard loot.
+- **History / proofs:** one root-level wallet and economy store; finality checks, failed/refunded settlement handling, redirect recovery, account-scoped cached receipts, paginated NearBlocks v3 account history, and direct Explorer links.
+- **Artwork:** the supplied original NEAR and USDC marks are displayed with rounded styling. Existing card and companion artwork is preserved.
+
+[Live game contract](https://testnet.nearblocks.io/address/scanmon-6f49a2b600.testnet) · [Mock USDC](https://testnet.nearblocks.io/address/usdc.scanmon-6f49a2b600.testnet) · [Contract source and methods](smartcontract/README.md)
+
+USDC.mock has no cash value. The app displays the actual Tomo subaccount, `tomo.scanmon-6f49a2b600.testnet`; it does not control the unrelated `tomo.testnet` account.
+
+## Deployment
+
+Read [Vercel deployment and exact environment variables](docs/vercel-deployment.md). Vercel builds the Next.js app; contracts are already deployed. Deployment/treasury keys remain local and ignored. Only the separate low-balance sponsor key is needed by Vercel for optional Google onboarding funding.
 
 ## Checks
 
-```sh
-npm run lint
+```bash
 npm run typecheck
+npm run lint
 npm test
+npm run contract:test
 npm run build
 ```
 
-Browser verification uses gstack browse. Verified navigation and active states for all four tabs, empty secondary pages, permission-denied recovery, invalid manual checksum rejection, valid manual success, and actual ZXing decoding of generated EAN-13 image frames through a synthetic camera stream. Confirmed tracks ended after successful decoding. Checked 360, 390, and 430 px mobile widths and the 480 px shell on desktop, without horizontal overflow.
+`npm run test:integration` uses funded QA accounts from ignored env variables to perform real testnet transactions. Public receipts and verification notes are in [the validation report](docs/integration-validation.md). It is not run as part of Vercel deployment.
 
-A physical phone camera was not available. Real Android/iOS camera focus, permission prompts, and safe-area rendering still need device verification.
-
-## Tomo companion UI preview
-
-The Scan screen includes Tomo at the bottom-left. Open the wooden Tasks/About board to see three planned tasks (scan one item, scan three different items, win one battle), planned USDC rewards, agent funding/distribution bars, and the NEAR contract/payment-proof area. Settings uses the supplied `settings.png` artwork.
-
-Validated barcode results, including the labeled manual fallback, advance scan progress locally in this browser. UPC-A and its equivalent leading-zero EAN-13 are treated as the same item, and repeated scans do not advance the three-item task. This local progress is for UI preview only and is not trusted reward eligibility.
-
-The agent contract is not deployed. Balances are unavailable, Battle is unavailable, and Claim stays disabled. No wallet, AI inference, USDC transfer, or transaction receipt is simulated. NEAR receipts will require a real backend/contract connection. The displayed +1/+2/+2 USDC amounts are proposed preview rewards, not active offers.
-
-Tomo uses the supplied animated GIF, with a static first-frame rendition for reduced motion. Token artwork attribution is included in `public/assets/tokens/ATTRIBUTION.md`.
+The integration is scoped to the requested on-chain flows. The wider PRD's external price feeds and isolated economy fast-forward are separate features. Physical Android/iOS camera behavior still needs device testing.

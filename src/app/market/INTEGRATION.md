@@ -1,28 +1,11 @@
-# Market frontend handoff
+# Market integration
 
-Route: `/market`.
+`GameProvider` installs `createChainMarketAdapter()` above all routes. Its immutable snapshots come from the central NEAR game store, including contract-owned Koban stock, the connected account's actual card instances, raid locks, and loading/error state.
 
-Approved references:
-- `random/scanmon-asets/layout-references/Koban market with twin Nyan cards.png` (Buy/Sell card picker)
-- `random/scanmon-asets/layout-references/Nyan Cat offer on ScanMon Market.png` (Negotiation with Koban, without "Your offer" and with Koban's reply in the speech bubble above his head)
-- `public/assets/market/koban-video.mp4` + `public/assets/market/koban-shop-still.png` (reduced-motion still & video poster)
+The original NDJSON merchant dialogue route still uses server-side Gemini/DeepSeek credentials. The chain adapter supplies the final contract quote and availability; AI output cannot choose settlement amounts. `acceptOffer` uses the connected wallet, verifies the final receipt and game settlement event, opens the shared receipt modal, and refreshes ownership and balances. Price changes and rejected FT transfers surface as refunds, never completed trades.
 
-## Live Koban LLM negotiation
+Buy uses USDC `ft_transfer_call`; Sell uses reserved Koban funds and a private rollback callback. `PlayerMarket` additionally exposes on-chain listing, cancellation, player purchase and seller-credit withdrawal. Listing escrow removes cards from Collection and Battle until they are cancelled or transferred to the buyer.
 
-By default, `/market` wires `createKobanMarketAdapter()` (`src/app/market/koban-market-adapter.ts`) to `POST /api/market/negotiate` (`src/app/api/market/negotiate/route.ts`):
-- Streams real-time NDJSON (`delta` / `done`) responses from Google Gemini (`@google/genai`, `GEMINI_API_KEY`) with automatic streaming fallback to DeepSeek (`deepseek-chat`, `DEEPSEEK_API_KEY`) using server `.env` credentials.
-- Answers both price offers/counteroffers and general questions about the selected card, trade flow, or scanMon shop (`offerIntent: "none"` keeps the speech bubble open without fabricating a USDC offer).
-- Excludes boss reward card `almarts27-hamster-boss` from Buy, Sell, and `/api/market/negotiate`.
+The shared Settings control remains available on Market. The existing approved Koban artwork, video/poster, and Buy/Sell interface are preserved.
 
-## Shared state and wallet hookup
-
-From a shared client session provider above routes, call `connectMarketAdapter(adapter)` from `market-store.ts` and invoke the returned cleanup callback on unmount to override or compose the default Koban adapter. See `market-interface.ts` for full types.
-
-### Missing inputs / actions outside this frontend pass
-1. **Shop availability (`MarketSnapshot.catalog`)**: Supply `{ cardId, inStock, stockCount }` entries for standard cards. Boss card `almarts27-hamster-boss` is always excluded by `resolveBuyCards`. Any entry with `inStock: false` or `stockCount <= 0` stays visible with **Out of stock** and disables negotiation.
-2. **Player ownership (`MarketSnapshot.ownedCards`)**: Supply `{ instanceId, cardId, sellEligible, lockedByListing, transferLocked, ineligibleReason }` from shared ownership state. Boss reward cards are always excluded from Sell; locked/listed cards cannot be negotiated; empty eligible inventory shows **No cards to sell**.
-3. **Trade settlement (`MarketAdapter.acceptOffer` + `refreshState`)**: Default adapter returns `{ success: false, status: "failed", message: "Wallet settlement isn't connected yet." }` so no fake trade is ever shown. Connect NEAR/USDC settlement returning `{ success, status: "completed" | "expired" | "failed", message, txHash }` and await `refreshState?.()` on `{ success: true, status: "completed" }`.
-
-## Shell coordination
-
-All Market shell overrides (including hiding `.app-header` on `/market`) are scoped inside `market.css` using `.app-shell:has(.market-screen)` so `scan-shell.tsx`, `globals.css`, Scan, Collection, and Battle remain untouched.
+See [contract behavior](../../../smartcontract/README.md), [deployment](../../../docs/vercel-deployment.md), and [verification](../../../docs/integration-validation.md). The legacy Koban adapter's disconnected settlement method is only a fallback; the root provider supplies live settlement in the app.

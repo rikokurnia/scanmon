@@ -1,35 +1,11 @@
-# Battle frontend handoff
+# Battle integration
 
-Routes: `/battle`, `/battle/team`, `/battle/arena`, `/battle/quick-match`.
+`GameProvider` installs `createChainBattleAdapter()` above route changes. It reads the same NEAR-owned card instances as Collection and Market. Team preferences are stored per network/account; the contract revalidates the three unique owned instances before every raid.
 
-The source PRD available in this checkout is `random/prd.md`; `prd(5).md` was not present. All three approved references were present and inspected. Assets are deployed from `public/assets/battle/`; full-art cards resolve through Collection's existing `CARD_CATALOG`. No ownership is inferred from that catalog.
+`start_raid` and `attack` execute on the game contract. HP, skill validity, turn number, battle ID, actor eligibility, heavy-attack warnings and victory/loss are authoritative on-chain state. Active team cards cannot transfer, list or sell. New immutable snapshots refresh the existing arena UI after finality.
 
-## Shared state hookup
+Victory exposes `claim_loot`, which pays 2 USDC + 10 Shards from Tomo's finite deposited budget, at most once per raid and account/UTC day. Payout callbacks release reservations on failure; loot never appears granted solely because an animation finished. First-win task progression is read from the contract. The root transaction modal links directly to the final NEAR Explorer receipt.
 
-Battle now defaults to `createCollectionBattleAdapter`: it reads the same `scanmon:collection:v1` owned instances as Scan, Collection and Market, and persists selected instance IDs in `scanmon:battle-team:v1`. Collection-change and storage events refresh Battle, including across tabs. If a shared Market adapter is connected, its authoritative ownership and listing/transfer locks supersede local ownership. Market buy/sell settlement is still unavailable; no sales or cards are invented.
+Gameplay statistics are scanMon's rules; printed values in supplied artwork remain reference art. Quick Match is still an unavailable PvP screen, as PvP is outside the requested raid MVP. The offline Collection adapter remains a fallback for interface tests, while the normal app always installs the chain adapter.
 
-For combat integration, from a shared **client session provider**, call `connectBattleAdapter(adapter)` from `battle-store.ts` and dispose the returned callback when the session ends. The provider must live above routes so navigation preserves state. See `BattleAdapter` and `BattleSnapshot` in `battle-interface.ts`.
-
-- Supply immutable snapshots with stable **owned instance IDs**, canonical Collection `CardId`s, ownership loading/error state, and saved team IDs.
-- Set `raidEligible`, `lockedByListing` and `ineligibleReason` from Collection/Market's authoritative state. Publish changes immediately when cards are listed, sold, or transferred. Team validation runs again before starting a raid.
-- `saveTeam` must persist at most three distinct eligible instance IDs and publish the saved selection. Empty/partial teams can be edited and saved; raid entry requires `minimumTeamSize` (default 3 from PRD). Battle does not create a second ownership store. The fallback team key is frontend-only; a real provider should migrate or replace that team persistence.
-- `startRaid` must publish a `BattleState` with runtime HP, round, skills, and team members. Printed stats remain solely in original card artwork. Return failures by rejecting the promise with player-readable text.
-- `attack` receives battle ID, expected round, acting instance ID and skill ID. It represents **one team action per round**. Publish `resolving` immediately, then the authoritative next state. The frontend additionally locks synchronous duplicate clicks until completion. Service validation and idempotency remain required.
-- Publish heavy-attack warning text, win/loss status, and reward status from the raid service. `effect` is an event with a new unique ID: a canonical character ID selects its supplied attack art; `boss` selects the rainbow attack. `hit` adds the universal contact effect. Effects last under one second; reduced motion hides effects and uses still frames instead of GIFs.
-
-Without a combat adapter, eligible saved teams can open the arena and display their actual characters/cards, but Attack remains disabled with Battle unavailable. The fallback validates the team on entry and does not generate runtime combat state. No opponents, outcomes, rewards, or ownership fixtures ship in player flow. Quick Match is a frontend unavailable screen with a back action.
-
-## Shell coordination
-
-No shared shell, Scan, Collection, or Market files were edited. `battle.css` uses `.app-shell:has(.battle-arena)` to hide only that route's shared header/navbar, and marks Battle visually selected on nested Battle screens. If the shell later exposes a route-level layout option, replace those narrowly scoped selectors with that interface. Settings and every nav link remain the existing controls on Menu/Editor.
-
-## Verification
-
-- `npm run typecheck`, `npm run lint`, `npm run build`.
-- `npx tsx --test src/app/battle/battle-interface.test.ts`: stable IDs, three-card cap, duplicate copies, listing locks, invalid saved ownership, configured raid minimum.
-- gstack browse at 390×844, 430×932 and short 360×640. Opened screenshots against all three references; checked horizontal overflow, full-art aspect ratios, 44px controls, and Attack visible at 360×640. Editor scrolls on short phones.
-- A temporary client adapter QA route (removed after checking) exercised selecting three cards, rejection of a fourth, disabled listed card, save → menu → re-edit with saved selection → challenge → switch → attack → resolving lock → authoritative HP/round update → return. Verified the arena hides both shell regions and the editor restores the navbar with Battle selected.
-- Normal empty/unavailable flows, Quick Match back action, and shared nav links checked. Reduced-motion branches are implemented, but browser emulation could not be exercised because gstack denies Emulation.setEmulatedMedia. Physical-device Safari/Android and production raid settlement remain untested/out of scope.
-
-- Shared-card integration checks: adapter tests verify revealed IDs/art identity, live collection events, persistence across adapter recreation, cross-tab team updates, authoritative Market locks/removal, invalid save rejection, and failed-storage handling.
-- Browser shared-data check used temporary QA ownership (restored afterward): the same Pikachu, Veemon and Gengar appeared in Collection, Battle and Market Sell. Saving all three survived a full page reload and populated three arena cards/sprites. Attack correctly stayed disabled without combat integration.
+See [contract behavior](../../../smartcontract/README.md), [deployment](../../../docs/vercel-deployment.md), and [verification](../../../docs/integration-validation.md). Real testnet raids, transfers, rewards, duplicate prevention, escrow cancellation and rollback receipts are recorded in the public validation artifacts.

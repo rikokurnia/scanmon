@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { claimLoot } from "@/lib/near/game-store";
 import { CARD_CATALOG } from "../collection/card-catalog";
 import {
   eligible,
@@ -432,6 +433,21 @@ export default function BattleScreen({ view }: { view: View }) {
         >
           {busy || battle?.phase === "resolving" ? "Resolving…" : "Attack"}
         </button>
+        {battle?.phase === "won" && battle.reward?.status !== "granted" && (
+          <div className="chain-claim-loot">
+            <button
+              className="chain-primary"
+              disabled={busy || battle.reward?.status === "pending"}
+              onClick={() =>
+                void perform(async () => {
+                  await claimLoot();
+                })
+              }
+            >
+              {busy ? "Claiming…" : "Claim loot · 2 USDC + 10 Shards"}
+            </button>
+          </div>
+        )}
         {(battle?.phase === "won" || battle?.phase === "lost") && (
           <Link className="battle-result-back" href="/battle">
             Back to Battle
