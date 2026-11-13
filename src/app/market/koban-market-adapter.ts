@@ -1,8 +1,14 @@
 "use client";
 
+import {
+  collectionSnapshot,
+  readCollection,
+  subscribeCollection,
+} from "@/lib/reveal-collection";
 import type {
   AcceptOfferResult,
   MarketAdapter,
+  MarketOwnedCard,
   MarketSnapshot,
   NegotiateRequest,
   NegotiateResponse,
@@ -13,31 +19,74 @@ interface ChatTurn {
   text: string;
 }
 
+function toMarketOwnedCards(raw: string): readonly MarketOwnedCard[] {
+  return readCollection(raw).map((result) => ({
+    instanceId: result.id,
+    cardId: result.cardId,
+    sellEligible: true,
+  }));
+}
+
 /**
  * Default client adapter connecting Market UI to the real-time server LLM route
- * (`/api/market/negotiate`). Catalog availability and player ownership remain
- * empty until a shared store/wallet adapter overrides via `connectMarketAdapter`.
+ * (`/api/market/negotiate`) and reading live player-owned cards from the shared
+ * Scan/Collection store (`scanmon:collection:v1`). A higher-level wallet/chain
+ * provider can still override via `connectMarketAdapter`.
  */
 export function createKobanMarketAdapter(): MarketAdapter {
-  const snapshot: MarketSnapshot = {
+  let cachedRaw = typeof window === "undefined" ? "[]" : collectionSnapshot();
+  let cachedSnapshot: MarketSnapshot = {
     catalog: [],
-    ownedCards: [],
+    ownedCards: toMarketOwnedCards(cachedRaw),
     loading: false,
     error: null,
   };
 
   const listeners = new Set<() => void>();
   const histories = new Map<string, ChatTurn[]>();
+  let unsubCollection: (() => void) | undefined;
+
+  const syncFromCollection = () => {
+    const nextRaw = typeof window === "undefined" ? "[]" : collectionSnapshot();
+    if (nextRaw === cachedRaw) return false;
+    cachedRaw = nextRaw;
+    cachedSnapshot = {
+      ...cachedSnapshot,
+      ownedCards: toMarketOwnedCards(nextRaw),
+    };
+    return true;
+  };
+
+  const notify = () => {
+    listeners.forEach((listener) => listener());
+  };
 
   return {
     getSnapshot() {
-      return snapshot;
+      syncFromCollection();
+      return cachedSnapshot;
     },
     subscribe(listener) {
       listeners.add(listener);
+      if (listeners.size === 1 && typeof window !== "undefined") {
+        unsubCollection = subscribeCollection(() => {
+          if (syncFromCollection()) {
+            notify();
+          }
+        });
+      }
       return () => {
         listeners.delete(listener);
+        if (listeners.size === 0) {
+          unsubCollection?.();
+          unsubCollection = undefined;
+        }
       };
+    },
+    async refreshState() {
+      if (syncFromCollection()) {
+        notify();
+      }
     },
     async negotiate(request: NegotiateRequest): Promise<NegotiateResponse> {
       const sessionKey = `${request.cardId}:${request.direction}:${request.instanceId ?? ""}`;

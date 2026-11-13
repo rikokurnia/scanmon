@@ -13,6 +13,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
@@ -24,11 +25,19 @@ import {
   isValidOfferForContext,
   resolveBuyCards,
   resolveSellCards,
+  type MarketSnapshot,
   type MerchantOffer,
   type TradeDirection,
 } from "./market-interface";
 import { useMarket } from "./market-store";
 import "./market.css";
+
+const EMPTY_MARKET_SNAPSHOT: MarketSnapshot = {
+  catalog: [],
+  ownedCards: [],
+  loading: false,
+  error: null,
+};
 
 interface SelectedTradeCard {
   cardId: CardId;
@@ -106,9 +115,19 @@ function ThinkingDots() {
 }
 
 export default function MarketScreen() {
-  const { snapshot, adapter: connectedAdapter } = useMarket();
+  const { adapter: connectedAdapter } = useMarket();
   const defaultKobanAdapter = useMemo(() => createKobanMarketAdapter(), []);
   const adapter = connectedAdapter ?? defaultKobanAdapter;
+  const subscribeAdapter = useCallback(
+    (listener: () => void) => adapter.subscribe(listener),
+    [adapter],
+  );
+  const getAdapterSnapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
+  const snapshot = useSyncExternalStore(
+    subscribeAdapter,
+    getAdapterSnapshot,
+    () => EMPTY_MARKET_SNAPSHOT,
+  );
   const shouldReduceMotion = useReducedMotion();
 
   const [direction, setDirection] = useState<TradeDirection>("buy");
