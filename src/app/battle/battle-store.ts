@@ -1,5 +1,7 @@
 "use client";
-import { useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useMarket } from "../market/market-store";
+import { createCollectionBattleAdapter } from "./collection-battle-adapter";
 import type { BattleAdapter, BattleSnapshot } from "./battle-interface";
 const empty: BattleSnapshot = {
   ownedCards: [],
@@ -26,14 +28,27 @@ export function connectBattleAdapter(next: BattleAdapter) {
     }
   };
 }
-const subscribe = (listener: () => void) => {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-};
-const getSnapshot = () => adapter?.getSnapshot() ?? empty;
 export function useBattle() {
+  const { adapter: marketAdapter } = useMarket();
+  const fallback = useMemo(
+    () => createCollectionBattleAdapter(marketAdapter),
+    [marketAdapter],
+  );
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      listeners.add(listener);
+      const stop = fallback.subscribe(listener);
+      return () => {
+        listeners.delete(listener);
+        stop();
+      };
+    },
+    [fallback],
+  );
+  const getSnapshot = useCallback(
+    () => (adapter ?? fallback).getSnapshot(),
+    [fallback],
+  );
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => empty);
-  return { snapshot, adapter };
+  return { snapshot, adapter: adapter ?? fallback };
 }
