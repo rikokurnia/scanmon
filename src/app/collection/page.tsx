@@ -1,12 +1,24 @@
+"use client";
+import { useSyncExternalStore } from "react";
 import CollectionScreen from "./collection-screen";
-import type { OwnedCollectionCard } from "./card-catalog";
-
-/**
- * Ownership state is not yet present in the shared frontend store.
- * When available, pass the player's owned cards into CollectionScreen.
- */
-const EMPTY_OWNED_COLLECTION: OwnedCollectionCard[] = [];
-
+import {
+  collectionSnapshot,
+  readCollection,
+  subscribeCollection,
+} from "@/lib/reveal-collection";
 export default function CollectionPage() {
-  return <CollectionScreen cards={EMPTY_OWNED_COLLECTION} isLoading={false} />;
+  const snapshot = useSyncExternalStore(
+    subscribeCollection,
+    collectionSnapshot,
+    () => "[]",
+  );
+  return (
+    <CollectionScreen
+      cards={readCollection(snapshot).map((result) => ({
+        instanceId: result.id,
+        cardId: result.cardId,
+      }))}
+      isLoading={false}
+    />
+  );
 }

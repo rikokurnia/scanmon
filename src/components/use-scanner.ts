@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { IScannerControls } from "@zxing/browser";
 import { expandUPCE, validateBarcode } from "@/lib/barcode";
+import { resolveScanResult } from "@/lib/scan-result";
 import { recordScan } from "@/lib/hunt-progress";
 export type ScanState = "idle" | "requesting" | "scanning" | "found" | "error";
 export function useScanner(active: boolean) {
@@ -9,10 +10,11 @@ export function useScanner(active: boolean) {
   const stream = useRef<MediaStream | null>(null);
   const controls = useRef<IScannerControls | null>(null);
   const generation = useRef(0);
-  const lastCode = useRef("");
+  const locked = useRef(false);
+  const resumeLoop = useRef<(() => void) | null>(null);
+  const quietUntil = useRef(0);
   const [state, setState] = useState<ScanState>("idle");
   const [code, setCode] = useState("");
-  const [snapshot, setSnapshot] = useState("");
   const [message, setMessage] = useState("");
   const [torch, setTorch] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
@@ -39,34 +41,23 @@ export function useScanner(active: boolean) {
     document.addEventListener("visibilitychange", hide);
     return () => document.removeEventListener("visibilitychange", hide);
   }, [stop]);
-  const accept = useCallback(
-    (input: string) => {
-      const valid = validateBarcode(input);
-      if (!valid) return false;
-      if (lastCode.current === valid) return true;
-      if (video.current?.videoWidth) {
-        const canvas = document.createElement("canvas");
-        canvas.width = video.current.videoWidth;
-        canvas.height = video.current.videoHeight;
-        canvas.getContext("2d")?.drawImage(video.current, 0, 0);
-        setSnapshot(canvas.toDataURL("image/jpeg", 0.9));
-      }
-      recordScan(valid);
-      lastCode.current = valid;
-      setCode(valid);
-      setState("found");
-      setMessage("");
-      stop();
-      return true;
-    },
-    [stop],
-  );
+  const accept = useCallback((input: string) => {
+    const valid = validateBarcode(input);
+    if (!valid) return false;
+    if (locked.current) return true;
+    locked.current = true;
+    recordScan(valid);
+    setCode(valid);
+    setState("found");
+    setMessage("");
+    controls.current?.stop();
+    return true;
+  }, []);
   async function start() {
     stop();
     const session = generation.current;
-    lastCode.current = "";
+    locked.current = false;
     setCode("");
-    setSnapshot("");
     setMessage("");
     setState("requesting");
     try {
@@ -131,24 +122,24 @@ export function useScanner(active: boolean) {
       const reader = new BrowserMultiFormatReader(hints, {
         delayBetweenScanAttempts: 180,
       });
-      const scanner = await reader.decodeFromStream(
-        media,
-        video.current!,
-        (result, error, scannerControls) => {
-          if (session !== generation.current) {
-            scannerControls.stop();
+      video.current!.srcObject = media;
+      await video.current!.play();
+      if (session !== generation.current) return;
+      resumeLoop.current = () => {
+        const scanner = reader.scan(video.current!, (result, error) => {
+          if (
+            session !== generation.current ||
+            locked.current ||
+            Date.now() < quietUntil.current
+          )
             return;
-          }
           if (result) {
             const raw = result.getText();
             const valid =
               result.getBarcodeFormat() === BarcodeFormat.UPC_E
                 ? expandUPCE(raw)
                 : validateBarcode(raw);
-            if (valid) {
-              accept(valid);
-              scannerControls.stop();
-            }
+            if (valid) accept(valid);
           } else if (
             error &&
             !(error instanceof NotFoundException) &&
@@ -158,17 +149,15 @@ export function useScanner(active: boolean) {
             stop();
             setState("error");
             setMessage(
-              "The camera could not read this frame. Try again or use manual entry in Settings.",
+              "Camera unavailable. Try again or enter a barcode in Settings.",
             );
           }
-        },
-      );
-      if (session !== generation.current) {
-        scanner.stop();
-        return;
-      }
-      controls.current = scanner;
+        });
+        controls.current = scanner;
+        if (locked.current) scanner.stop();
+      };
       setState("scanning");
+      resumeLoop.current();
     } catch (error) {
       if (session !== generation.current) return;
       stop();
@@ -186,6 +175,15 @@ export function useScanner(active: boolean) {
                 : "Camera unavailable. Try again or enter a barcode in Settings.",
       );
     }
+  }
+  function resume() {
+    locked.current = false;
+    setCode("");
+    if (stream.current?.active && resumeLoop.current) {
+      quietUntil.current = Date.now() + 1000;
+      setState("scanning");
+      resumeLoop.current();
+    } else void start();
   }
   async function toggleTorch() {
     if (!torchSupported || !stream.current) {
@@ -215,11 +213,12 @@ export function useScanner(active: boolean) {
     state,
     code,
     message,
-    snapshot,
     torch,
     torchSupported,
     start,
     accept,
+    resume,
+    result: code ? resolveScanResult(code) : null,
     toggleTorch,
   };
 }

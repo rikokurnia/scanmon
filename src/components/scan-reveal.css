@@ -1,0 +1,180 @@
+.reveal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: grid;
+  align-items: center;
+  padding: 12px;
+}
+.reveal-stage {
+  position: relative;
+  width: 100%;
+  pointer-events: auto;
+  filter: drop-shadow(0 10px 15px #0003);
+}
+.reveal-canvas {
+  position: relative;
+  aspect-ratio: 16/9;
+  isolation: isolate;
+}
+.reveal-canvas img {
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.split-frame {
+  z-index: 0;
+}
+.reveal-character {
+  position: absolute;
+  left: 6%;
+  top: 11%;
+  width: 39%;
+  height: 77%;
+}
+.reveal-card {
+  position: absolute;
+  left: 53%;
+  top: 8%;
+  width: 40%;
+  height: 84%;
+}
+.peel-face,
+.peel-back {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  backface-visibility: hidden;
+}
+.peel-face {
+  z-index: 2;
+}
+.peel-back {
+  z-index: 3;
+  filter: drop-shadow(4px 6px 5px #1118);
+  pointer-events: none;
+}
+.peel-back img {
+  filter: sepia(0.45) brightness(1.25);
+}
+.peel-back > span {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    #fff7ddc9,
+    #f4edffd9 38%,
+    #9c98b9a0 70%,
+    #fffbeac9
+  );
+}
+.peel-corner {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 20%;
+  height: 30%;
+  min-width: 44px;
+  min-height: 44px;
+  z-index: 4;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 0 35px 0 0;
+}
+.peel-corner:active {
+  cursor: grabbing;
+}
+.peel-corner:focus-visible {
+  outline: 2px dashed #192546;
+  outline-offset: -8px;
+}
+.reveal-close {
+  position: absolute;
+  right: 0;
+  top: -49px;
+  width: 44px;
+  height: 44px;
+  background: var(--cream);
+  border: 2px solid var(--navy);
+  border-radius: 50%;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 2px 0 #19254660;
+}
+.reveal-note {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  color: var(--navy);
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 12px;
+}
+.reveal-note button {
+  display: block;
+  margin: 4px auto 0;
+  min-height: 44px;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  background: var(--yellow);
+}
+.reveal-unavailable {
+  position: absolute;
+  top: 40%;
+  left: 20px;
+  right: 20px;
+  z-index: 5;
+  background: var(--cream);
+  padding: 15px;
+  border-radius: 15px;
+}
+.reveal-unavailable button {
+  min-height: 44px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-stage {
+    animation: sticker-rise 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @keyframes sticker-rise {
+    from {
+      transform: translateY(45svh) scale(0.97);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+  .phase-revealed .reveal-card {
+    animation: card-settle 0.24s ease-out;
+  }
+  @keyframes card-settle {
+    from {
+      transform: scale(0.96);
+      opacity: 0.5;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peel-back {
+    display: none;
+  }
+}
+.scan-main:has(.reveal-layer) .scan-guide {
+  visibility: hidden;
+}
+/* A dragged fold can extend past the stage; contain it without scrolling the phone. */
+.reveal-layer {
+  overflow: clip;
+}

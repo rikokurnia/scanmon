@@ -16,7 +16,7 @@ Open http://localhost:3000. Phone camera access requires an HTTPS deployment (or
 - `/` and `/scan`: rear-camera EAN-8, EAN-13, UPC-A and UPC-E decoding via ZXing, checksum validation, permission/error recovery, tap-to-start camera access and labeled manual fallback in Help. The yellow scan-again button appears only after validation.
 - `/collection`, `/battle`, `/market`: shared header/navigation with blank content.
 - No discovery rewards, minting, collection changes, wallets, or backend calls.
-- Camera frames stay on-device. A decoded frame is retained in memory for feedback and cleared on restart/navigation. Tracks stop after success, on navigation, and when the page is hidden.
+- Camera frames stay on-device. A decoded frame is retained in memory for feedback and cleared on restart/navigation. Decoding pauses after success while the camera remains live; tracks stop on navigation and when the page is hidden.
 - ZXing 1D result points are scan-line endpoints rather than reliable full barcode bounds, so the mint guide remains centered.
 - Daily Hunt is an invitation; no fabricated progression count is displayed.
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { useScanner } from "./use-scanner";
+import ScanReveal from "./scan-reveal";
 import TomoCompanion from "./tomo-companion";
 const tabs = [
   ["Scan", "/", "scan"],
@@ -63,11 +64,12 @@ function ShellContent({
   path: string;
 }) {
   const isScan = path === "/" || path === "/scan";
-  const { video, state, code, message, snapshot, start, accept } =
+  const { video, state, code, message, start, accept, resume, result } =
     useScanner(isScan);
   const dialog = useRef<HTMLDialogElement>(null);
   const [manual, setManual] = useState("");
   const [inputError, setInputError] = useState("");
+  const [revealing, setRevealing] = useState(false);
   const found = state === "found";
   const busy = state === "requesting";
   return (
@@ -110,15 +112,6 @@ function ShellContent({
                 muted
                 aria-label="Rear camera preview"
               />
-              {snapshot && (
-                <Image
-                  className="capture-frame"
-                  src={snapshot}
-                  alt="Last decoded barcode camera frame"
-                  fill
-                  unoptimized
-                />
-              )}
               <div className="camera-vignette" />
               <div
                 className={`scan-guide ${found ? "locked" : ""}`}
@@ -129,7 +122,7 @@ function ShellContent({
                 <i />
                 <i />
                 <span className="scan-line" />
-                {found && (
+                {found && !revealing && (
                   <>
                     <Art
                       name="scan-reaction-mint"
@@ -179,7 +172,7 @@ function ShellContent({
                   aria-busy={busy}
                 />
               )}
-              {found && (
+              {found && !revealing && (
                 <div className="found-feedback" role="status">
                   <div className="found-pill">
                     Barcode found <span>✓</span>
@@ -192,7 +185,7 @@ function ShellContent({
             </section>
             <div className="instruction-region">
               <section className="instruction-panel">
-                {found && (
+                {found && !revealing && (
                   <div className="success-action">
                     <Art
                       name="mystery-card"
@@ -204,9 +197,12 @@ function ShellContent({
                       className="sticker sticker-foil"
                       size={82}
                     />
-                    <button className="scan-button" onClick={start}>
+                    <button
+                      className="scan-button"
+                      onClick={() => setRevealing(true)}
+                    >
                       <span className="button-glint" aria-hidden="true" />
-                      Scan barcode
+                      Reveal
                     </button>
                   </div>
                 )}
@@ -224,6 +220,15 @@ function ShellContent({
               )}
             </div>
           </>
+        )}
+        {isScan && revealing && result && (
+          <ScanReveal
+            result={result}
+            onClose={() => {
+              setRevealing(false);
+              resume();
+            }}
+          />
         )}
         {isScan && <TomoCompanion onScan={start} />}
         {children}
@@ -271,12 +276,12 @@ function ShellContent({
           <li>Keep the whole barcode inside the mint guide.</li>
           <li>Use even lighting, avoid glare, and hold steady.</li>
           <li>
-            Once a code is found, the yellow button lets you scan another.
+            Once a code is found, tap Reveal and peel the upper-right corner.
           </li>
         </ol>
         <p className="help-note">
-          Can’t read it? You can enter the printed digits below. This pass ends
-          at a validated barcode.
+          Can’t read it? You can enter the printed digits below. Close the
+          reveal to continue scanning.
         </p>
         {isScan && (
           <form
