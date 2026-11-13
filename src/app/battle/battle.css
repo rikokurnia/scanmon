@@ -755,3 +755,131 @@
       inset 0 2px 4px #19254630;
   }
 }
+
+.battle-loop-effects {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.battle-loop-effects img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin: -50px 0 0 -50px;
+  opacity: 0;
+}
+.battle-switch-summon {
+  position: absolute;
+  inset: -35% -40%;
+  width: 180%;
+  height: 160%;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 4;
+}
+.battle-loop-hint {
+  font-size: 12px;
+  margin: 8px 0;
+}
+.battle-reveal-reward {
+  margin: 12px auto;
+  min-height: 48px;
+  color: var(--navy);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .player-projectile {
+    animation: battle-player-loop 2.4s ease-in-out infinite;
+  }
+  .boss-projectile {
+    animation: battle-boss-loop 2.4s ease-in-out infinite;
+  }
+  .boss-contact {
+    animation: battle-boss-contact 2.4s ease-out infinite;
+  }
+  .player-contact {
+    animation: battle-player-contact 2.4s ease-out infinite;
+  }
+  @keyframes battle-player-loop {
+    0% {
+      transform: translate(var(--from-x), var(--from-y)) scale(0.6);
+      opacity: 0;
+    }
+    6% {
+      opacity: 1;
+    }
+    43% {
+      transform: translate(var(--to-x), var(--to-y)) scale(1);
+      opacity: 1;
+    }
+    46%,
+    100% {
+      transform: translate(var(--to-x), var(--to-y));
+      opacity: 0;
+    }
+  }
+  @keyframes battle-boss-loop {
+    0%,
+    50% {
+      transform: translate(var(--to-x), var(--to-y)) scale(0.6);
+      opacity: 0;
+    }
+    56% {
+      opacity: 1;
+    }
+    93% {
+      transform: translate(var(--from-x), var(--from-y)) scale(1);
+      opacity: 1;
+    }
+    96%,
+    100% {
+      transform: translate(var(--from-x), var(--from-y));
+      opacity: 0;
+    }
+  }
+  @keyframes battle-boss-contact {
+    0%,
+    42% {
+      transform: translate(var(--to-x), var(--to-y)) scale(0.4);
+      opacity: 0;
+    }
+    45% {
+      opacity: 1;
+      transform: translate(var(--to-x), var(--to-y)) scale(1.2);
+    }
+    55%,
+    100% {
+      opacity: 0;
+      transform: translate(var(--to-x), var(--to-y)) scale(0.8);
+    }
+  }
+  @keyframes battle-player-contact {
+    0%,
+    92% {
+      transform: translate(var(--from-x), var(--from-y)) scale(0.4);
+      opacity: 0;
+    }
+    95% {
+      opacity: 1;
+      transform: translate(var(--from-x), var(--from-y)) scale(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--from-x), var(--from-y)) scale(0.8);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle-loop-effects,
+  .battle-switch-summon {
+    display: none;
+  }
+}
+.battle-attack.is-looping:disabled {
+  filter: none;
+  opacity: 1;
+}

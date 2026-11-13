@@ -1,0 +1,209 @@
+.boss-reward-dialog {
+  width: min(100%, 480px);
+  max-width: 480px;
+  height: 100svh;
+  max-height: 100svh;
+  margin: auto;
+  border: 0;
+  padding: calc(20px + env(safe-area-inset-top)) 16px
+    calc(24px + env(safe-area-inset-bottom));
+  color: var(--paper);
+  background: linear-gradient(#192546dc, #292143ed);
+  overflow-y: auto;
+}
+.boss-reward-dialog::backdrop {
+  background: #111b35b8;
+  backdrop-filter: blur(8px);
+}
+.boss-reward-close {
+  position: sticky;
+  top: 0;
+  margin-left: auto;
+  z-index: 3;
+  color: var(--navy);
+  font-size: 28px;
+  width: 44px;
+}
+.boss-reward-body {
+  container-type: inline-size;
+  margin-top: clamp(40px, 15svh, 150px);
+  text-align: center;
+}
+.boss-reward-body h2 {
+  font:
+    800 28px/1.2 "Baloo 2",
+    sans-serif;
+  margin: 0 0 24px;
+}
+.boss-reward-starfall {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: 480px;
+  height: 100svh;
+  margin: auto;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 1;
+}
+.boss-reward-skip {
+  position: relative;
+  z-index: 2;
+  background: var(--cream);
+  color: var(--navy);
+  border: 2px solid var(--navy);
+  border-radius: 24px;
+  min-height: 44px;
+  padding: 8px 20px;
+  font-weight: 900;
+}
+.boss-reward-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  isolation: isolate;
+}
+.boss-reward-summon .boss-reward-canvas {
+  visibility: hidden;
+}
+.boss-reward-canvas[aria-hidden="true"] {
+  visibility: hidden;
+}
+.boss-reward-open-art {
+  position: absolute;
+  inset: 0;
+}
+.boss-reward-mystery
+  .boss-reward-canvas:not(.is-uncovered)
+  .boss-reward-open-art {
+  visibility: hidden;
+}
+.boss-reward-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.boss-reward-character {
+  position: absolute;
+  left: 2%;
+  top: 4%;
+  width: 48%;
+  height: 88%;
+}
+.boss-reward-character img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.25);
+}
+.boss-reward-card {
+  position: absolute;
+  left: 54%;
+  top: 9%;
+  width: 38%;
+  height: 82%;
+  object-fit: contain;
+}
+.boss-reward-sticker {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.boss-reward-sticker img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.boss-reward-sticker span {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  right: 0;
+  color: var(--paper);
+  font-weight: 900;
+}
+/* Gap below the tall card equals 30% of its displayed height, accounting for frame padding. */
+.boss-reward-action {
+  margin-top: 8.775cqw;
+  padding-bottom: 24px;
+}
+.boss-reward-action .battle-yellow {
+  color: var(--navy);
+  width: 80%;
+  margin: auto;
+}
+.boss-reward-action p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.boss-reward-error {
+  padding: 12px;
+  background: var(--cream);
+  color: #8a2433;
+  border-radius: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-reward-starfall {
+    visibility: hidden;
+  }
+}
+
+.boss-reward-sticker,
+.boss-reward-peel-back {
+  transform-origin: 0 0;
+  backface-visibility: hidden;
+}
+.boss-reward-peel-back {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(4px 6px 5px #1118);
+}
+.boss-reward-peel-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: sepia(0.45) brightness(1.25);
+}
+.boss-reward-peel-back span {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    #fff7ddc9,
+    #f4edffd9 38%,
+    #9c98b9a0 70%,
+    #fffbeac9
+  );
+}
+.boss-reward-peel-corner {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 22%;
+  height: 35%;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.boss-reward-peel-hint {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  font-size: 13px;
+  font-weight: 900;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-reward-peel-back {
+    display: none;
+  }
+}

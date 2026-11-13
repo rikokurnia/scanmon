@@ -2,8 +2,9 @@
 /* eslint-disable @next/next/no-img-element -- Supplied full-art assets and animated GIFs. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { claimLoot } from "@/lib/near/game-store";
+import { useEffect, useRef, useState } from "react";
+import BattleEffects from "./battle-effects";
+import BossRewardReveal from "./boss-reward-reveal";
 import { CARD_CATALOG } from "../collection/card-catalog";
 import {
   eligible,
@@ -48,12 +49,20 @@ export default function BattleScreen({ view }: { view: View }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const stage = useRef<HTMLDivElement>(null);
+  const [loopActor, setLoopActor] = useState<string | null>(null);
+  const [summon, setSummon] = useState<{ id: string; nonce: number } | null>(
+    null,
+  );
+  const [showReward, setShowReward] = useState(false);
   const owned = state.ownedCards;
   const battle = state.battle;
   const acting =
     battle?.team.find((c) => c.instanceId === active && c.hp > 0) ??
     battle?.team.find((c) => c.hp > 0);
-  const team = state.savedTeamIds.flatMap((id) => {
+  const team = (
+    battle?.team.map((card) => card.instanceId) ?? state.savedTeamIds
+  ).flatMap((id) => {
     const card = owned.find((c) => c.instanceId === id);
     return card ? [card] : [];
   });
@@ -65,16 +74,79 @@ export default function BattleScreen({ view }: { view: View }) {
     try {
       await action();
       done?.();
+      return true;
     } catch (error) {
       setMessage(
         error instanceof Error
           ? error.message
           : "Unable to continue. Try again.",
       );
+      return false;
     } finally {
       lock.current = false;
       setBusy(false);
     }
+  }
+  const live = useRef({ battle, adapter, perform });
+  useEffect(() => {
+    live.current = { battle, adapter, perform };
+  });
+  useEffect(() => {
+    if (!loopActor || view !== "arena") return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      const current = live.current;
+      const fighter = current.battle?.team.find(
+        (card) => card.instanceId === loopActor && card.hp > 0,
+      );
+      if (
+        !current.adapter ||
+        !fighter ||
+        current.battle?.phase !== "choosing"
+      ) {
+        if (!stopped) setLoopActor(null);
+        return;
+      }
+      const ok = await current.perform(() =>
+        current.adapter!.attack({
+          battleId: current.battle!.id,
+          round: current.battle!.round,
+          instanceId: loopActor,
+          skillId: fighter.skill.id,
+        }),
+      );
+      if (!stopped && ok) timer = setTimeout(tick, 2400);
+      else if (!stopped) setLoopActor(null);
+    };
+    timer = setTimeout(tick, 1080);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [loopActor, view]);
+  useEffect(() => {
+    if (!summon) return;
+    const timer = setTimeout(() => setSummon(null), 2080);
+    return () => clearTimeout(timer);
+  }, [summon]);
+  useEffect(() => {
+    if (
+      view !== "arena" ||
+      battle?.phase !== "won" ||
+      battle.reward?.status === "granted"
+    )
+      return;
+    const timer = setTimeout(() => setShowReward(true), 0);
+    return () => clearTimeout(timer);
+  }, [view, battle?.id, battle?.phase, battle?.reward?.status]);
+  function switchCharacter(instanceId: string) {
+    setLoopActor(null);
+    setActive(instanceId);
+    setSummon((current) => ({
+      id: instanceId,
+      nonce: (current?.nonce ?? 0) + 1,
+    }));
   }
   async function challenge() {
     const issue = teamIssue(state.savedTeamIds, owned, state.minimumTeamSize);
@@ -320,37 +392,42 @@ export default function BattleScreen({ view }: { view: View }) {
           )}
         </div>
       </div>
-      <div className="battle-stage">
+      <div className="battle-stage" ref={stage}>
         <Sprite id="boss" className="battle-boss" />
         <div className="battle-team-sprites">
           {team.map((card) => (
             <div
               key={card.instanceId}
+              data-fighter-id={card.instanceId}
               className={`battle-team-sprite ${acting?.instanceId === card.instanceId ? "is-active" : ""}`}
             >
               <Sprite id={card.cardId} />
+              {summon?.id === card.instanceId && (
+                <img
+                  key={summon.nonce}
+                  className="battle-switch-summon"
+                  src="/assets/battle/summon-sky-drop.gif"
+                  alt=""
+                />
+              )}
             </div>
           ))}
         </div>
-        {battle?.effect && (
-          <div
-            key={battle.effect.id}
-            className={`battle-vfx ${battle.effect.source === "boss" ? "from-boss" : ""}`}
-            aria-hidden="true"
-          >
-            <img
-              src={`/assets/battle/${["boss", "almarts27-hamster-boss"].includes(battle.effect.source) ? "rainbow-attack-almart27" : `attack-${battle.effect.source}`}.png`}
-              alt=""
+        {loopActor &&
+          battle?.phase === "choosing" &&
+          battle.team.some(
+            (fighter) => fighter.instanceId === loopActor && fighter.hp > 0,
+          ) &&
+          team.some((card) => card.instanceId === loopActor) && (
+            <BattleEffects
+              key={loopActor}
+              stage={stage}
+              actorId={loopActor}
+              cardId={
+                team.find((card) => card.instanceId === loopActor)!.cardId
+              }
             />
-            {battle.effect.hit && (
-              <img
-                className="battle-hit"
-                src="/assets/battle/universal-hit.png"
-                alt=""
-              />
-            )}
-          </div>
-        )}
+          )}
       </div>
       <section className="battle-controls">
         <h2>Switch Character</h2>
@@ -373,7 +450,7 @@ export default function BattleScreen({ view }: { view: View }) {
                   !fighter ||
                   fighter.hp <= 0
                 }
-                onClick={() => setActive(card.instanceId)}
+                onClick={() => switchCharacter(card.instanceId)}
               >
                 <Card card={card} />
               </button>
@@ -417,36 +494,45 @@ export default function BattleScreen({ view }: { view: View }) {
         </div>
         {notice}
         <button
-          className="battle-yellow battle-attack"
-          disabled={!canAttack}
+          className={`battle-yellow battle-attack ${loopActor && battle?.phase === "choosing" ? "is-looping" : ""}`}
+          disabled={
+            !canAttack ||
+            (loopActor === acting?.instanceId && battle?.phase === "choosing")
+          }
           onClick={() => {
-            if (adapter && battle && acting && canAttack)
-              void perform(() =>
-                adapter.attack({
-                  battleId: battle.id,
-                  round: battle.round,
-                  instanceId: acting.instanceId,
-                  skillId: acting.skill.id,
-                }),
-              );
+            if (canAttack && acting) setLoopActor(acting.instanceId);
           }}
         >
-          {busy || battle?.phase === "resolving" ? "Resolving…" : "Attack"}
+          {loopActor && battle?.phase === "choosing"
+            ? "Attacking…"
+            : busy || battle?.phase === "resolving"
+              ? "Resolving…"
+              : "Attack"}
         </button>
-        {battle?.phase === "won" && battle.reward?.status !== "granted" && (
-          <div className="chain-claim-loot">
-            <button
-              className="chain-primary"
-              disabled={busy || battle.reward?.status === "pending"}
-              onClick={() =>
-                void perform(async () => {
-                  await claimLoot();
-                })
-              }
-            >
-              {busy ? "Claiming…" : "Claim loot · 2 USDC + 10 Shards"}
-            </button>
-          </div>
+        {loopActor && battle?.phase === "choosing" && (
+          <p className="battle-loop-hint">
+            Attacking continuously · tap a card to switch and pause
+          </p>
+        )}
+        {battle?.phase === "won" && (
+          <button
+            className="battle-yellow battle-reveal-reward"
+            onClick={() => setShowReward(true)}
+          >
+            {battle.reward?.status === "granted"
+              ? "View boss reward"
+              : "Reveal boss reward"}
+          </button>
+        )}
+        {showReward && battle?.phase === "won" && (
+          <BossRewardReveal
+            onClose={() => setShowReward(false)}
+            onClaim={adapter?.claimReward}
+            claimed={battle.reward?.status === "granted"}
+            inVault={owned.some(
+              (card) => card.cardId === "almarts27-hamster-boss",
+            )}
+          />
         )}
         {(battle?.phase === "won" || battle?.phase === "lost") && (
           <Link className="battle-result-back" href="/battle">

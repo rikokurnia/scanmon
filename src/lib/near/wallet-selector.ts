@@ -80,8 +80,7 @@ export async function connectNearWallet() {
       methodNames: [
         "mint_scan",
         "claim_task",
-        "start_raid",
-        "attack",
+        "claim_boss_reward",
         "claim_loot",
         "sell_to_koban",
         "withdraw_usdc",

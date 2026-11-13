@@ -90,6 +90,11 @@ pub struct Raid {
     pub reward: Option<Reward>,
     pub effect: Option<Effect>,
 }
+#[near(serializers=[json])]
+pub struct RaidAction {
+    pub instance_id: String,
+    pub skill_id: String,
+}
 #[near(serializers=[borsh, json])]
 #[derive(Clone)]
 pub struct Payment {
@@ -237,7 +242,7 @@ impl Game {
         json!({"owner_id":self.owner,"usdc_contract_id":self.usdc,"tomo_account_id":self.tomo,"koban_account_id":self.koban,"season":"v1","tomo_budget":U128(self.credit(&self.tomo)),"koban_budget":U128(self.credit(&self.koban)),"distributed":U128(self.distributed)})
     }
     pub fn get_player(&self, account_id: AccountId) -> serde_json::Value {
-        json!({"cards":self.owned.get(&account_id).unwrap_or_default().iter().filter_map(|id|self.cards.get(id)).collect::<Vec<_>>(),"shards":U128(self.shards.get(&account_id).unwrap_or(0)),"usdc_credit":U128(self.credit(&account_id)),"discoveries":self.counts.get(&account_id).unwrap_or(0),"starter_claimed":self.claims.contains(&format!("starter:{account_id}")),"first_win":self.claims.contains(&format!("first-win:{account_id}")),"claims":(["first","three","battle"].iter().filter(|task|self.claims.contains(&format!("task:{account_id}:{task}"))).collect::<Vec<_>>()),"locked_ids":self.owned.get(&account_id).unwrap_or_default().iter().filter(|id|self.locks.contains(id)).collect::<Vec<_>>(),"raid":self.raids.get(&account_id)})
+        json!({"cards":self.owned.get(&account_id).unwrap_or_default().iter().filter_map(|id|self.cards.get(id)).collect::<Vec<_>>(),"shards":U128(self.shards.get(&account_id).unwrap_or(0)),"usdc_credit":U128(self.credit(&account_id)),"discoveries":self.counts.get(&account_id).unwrap_or(0),"starter_claimed":self.claims.contains(&format!("starter:{account_id}")),"first_win":self.claims.contains(&format!("first-win:{account_id}")),"claims":(["first","three","battle"].iter().filter(|task|self.claims.contains(&format!("task:{account_id}:{task}"))).collect::<Vec<_>>()),"locked_ids":self.owned.get(&account_id).unwrap_or_default().iter().filter(|id|self.locks.contains(id)).collect::<Vec<_>>(),"boss_reward_token":self.discoveries.get(&format!("boss-nft:v1:{account_id}")),"raid":self.raids.get(&account_id)})
     }
     pub fn get_discovery(&self, account_id: AccountId, barcode: String) -> Option<Card> {
         let canonical = check_barcode(&barcode);
@@ -662,6 +667,15 @@ impl Game {
         skill_id: String,
     ) -> Raid {
         assert_one_yocto();
+        self.resolve_raid_attack(battle_id, round, instance_id, skill_id)
+    }
+    fn resolve_raid_attack(
+        &mut self,
+        battle_id: String,
+        round: u32,
+        instance_id: String,
+        skill_id: String,
+    ) -> Raid {
         let who = env::predecessor_account_id();
         let mut raid = self.raids.get(&who).expect("Start a raid");
         require!(
@@ -709,6 +723,49 @@ impl Game {
         }
         self.raids.insert(&who, &raid);
         raid
+    }
+    /// One wallet transaction: replay a bounded transcript, validate victory,
+    /// then mint the unique first-clear boss collectible. No client HP is trusted.
+    #[payable]
+    pub fn claim_boss_reward(&mut self, team_ids: Vec<String>, actions: Vec<RaidAction>) -> Card {
+        require!(
+            env::attached_deposit().as_yoctonear() >= STORAGE,
+            "Attach 0.01 NEAR storage"
+        );
+        let who = env::predecessor_account_id();
+        let key = format!("boss-nft:v1:{who}");
+        // Retried receipts never mint a second NFT, even after the first was traded.
+        if let Some(token_id) = self.discoveries.get(&key) {
+            let card = self.cards.get(&token_id).expect("Reward token missing");
+            event(
+                "boss_reward",
+                json!({"account_id":who,"token_id":card.token_id,"already_claimed":true}),
+            );
+            return card;
+        }
+        require!(
+            !actions.is_empty() && actions.len() <= 32,
+            "Invalid raid transcript length"
+        );
+        let mut raid = self.start_raid(team_ids);
+        for action in actions {
+            raid =
+                self.resolve_raid_attack(raid.id, raid.round, action.instance_id, action.skill_id);
+        }
+        require!(raid.phase == "won", "Win the raid before claiming");
+        let card = self.mint(&who, "almarts27-hamster-boss", "boss:first-clear:v1");
+        self.discoveries.insert(&key, &card.token_id);
+        self.claims.insert(&format!("first-win:{who}"));
+        raid.reward = Some(Reward {
+            status: "granted".into(),
+            text: "Boss NFT added to your vault".into(),
+        });
+        self.raids.insert(&who, &raid);
+        event(
+            "boss_reward",
+            json!({"account_id":who,"token_id":card.token_id,"already_claimed":false}),
+        );
+        card
     }
     #[payable]
     pub fn claim_loot(&mut self) -> Promise {
@@ -1140,6 +1197,124 @@ mod tests {
             account("koban.testnet"),
             account("sponsor.testnet"),
         )
+    }
+    fn raid_team(g: &mut Game) -> Vec<String> {
+        ctx("alice.testnet", STORAGE);
+        ["pikachu", "veemon", "gengar"]
+            .iter()
+            .map(|species| g.mint(&account("alice.testnet"), species, "").token_id)
+            .collect()
+    }
+    fn winning_actions(ids: &[String]) -> Vec<RaidAction> {
+        [0, 0, 0, 1, 1]
+            .iter()
+            .map(|i| RaidAction {
+                instance_id: ids[*i].clone(),
+                skill_id: "strike".into(),
+            })
+            .collect()
+    }
+    #[test]
+    fn single_claim_replays_victory_and_mints_first_clear_nft_once() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        let reward = g.claim_boss_reward(ids.clone(), winning_actions(&ids));
+        assert_eq!(reward.card_id, "almarts27-hamster-boss");
+        assert_eq!(reward.owner_id, account("alice.testnet"));
+        let raid = g.raids.get(&account("alice.testnet")).unwrap();
+        assert_eq!(
+            (raid.round, raid.boss_hp, raid.team[0].hp, raid.team[1].hp),
+            (6, 0, 20, 95)
+        );
+        assert_eq!(raid.reward.unwrap().status, "granted");
+        assert!(ids.iter().all(|id| !g.locks.contains(id)));
+        assert!(g.claims.contains(&"first-win:alice.testnet".into()));
+        let retry = g.claim_boss_reward(ids.clone(), winning_actions(&ids));
+        assert_eq!(reward.token_id, retry.token_id);
+        assert_eq!(g.owned.get(&account("alice.testnet")).unwrap().len(), 4);
+        g.move_card(
+            &account("alice.testnet"),
+            &account("bob.testnet"),
+            &reward.token_id,
+        );
+        let retry_after_trade = g.claim_boss_reward(ids.clone(), winning_actions(&ids));
+        assert_eq!(retry_after_trade.token_id, reward.token_id);
+        assert_eq!(g.owned.get(&account("alice.testnet")).unwrap().len(), 3);
+    }
+    #[test]
+    #[should_panic(expected = "Win the raid before claiming")]
+    fn boss_claim_rejects_incomplete_win() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        g.claim_boss_reward(
+            ids.clone(),
+            vec![RaidAction {
+                instance_id: ids[0].clone(),
+                skill_id: "strike".into(),
+            }],
+        );
+    }
+    #[test]
+    #[should_panic(expected = "Not your card")]
+    fn boss_claim_rejects_sold_team_card() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        g.move_card(&account("alice.testnet"), &account("bob.testnet"), &ids[1]);
+        g.claim_boss_reward(ids.clone(), winning_actions(&ids));
+    }
+    #[test]
+    #[should_panic(expected = "Transfer still resolving")]
+    fn boss_claim_rejects_pending_transfer() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        g.inflight.insert(&ids[0]);
+        g.claim_boss_reward(ids.clone(), winning_actions(&ids));
+    }
+    #[test]
+    #[should_panic(expected = "Invalid skill")]
+    fn boss_claim_rejects_forged_skill() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        g.claim_boss_reward(
+            ids.clone(),
+            vec![RaidAction {
+                instance_id: ids[0].clone(),
+                skill_id: "instant-win".into(),
+            }],
+        );
+    }
+    #[test]
+    #[should_panic(expected = "Choose a living monster")]
+    fn boss_claim_rejects_dead_actor() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        let actions = (0..5)
+            .map(|_| RaidAction {
+                instance_id: ids[0].clone(),
+                skill_id: "strike".into(),
+            })
+            .collect();
+        g.claim_boss_reward(ids, actions);
+    }
+    #[test]
+    #[should_panic(expected = "Duplicate card")]
+    fn boss_claim_rejects_duplicate_team() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        g.claim_boss_reward(vec![ids[0].clone(); 3], winning_actions(&ids));
+    }
+    #[test]
+    #[should_panic(expected = "Invalid raid transcript length")]
+    fn boss_claim_bounds_replay_gas() {
+        let mut g = game();
+        let ids = raid_team(&mut g);
+        let actions = (0..33)
+            .map(|_| RaidAction {
+                instance_id: ids[0].clone(),
+                skill_id: "strike".into(),
+            })
+            .collect();
+        g.claim_boss_reward(ids, actions);
     }
     #[test]
     fn duplicate_barcode_never_mints_twice() {

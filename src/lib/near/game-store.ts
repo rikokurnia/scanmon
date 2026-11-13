@@ -21,6 +21,12 @@ import type {
 } from "./types";
 import type { ScanResult } from "../scan-result";
 import type { BattleState } from "@/app/battle/battle-interface";
+import {
+  newRaid,
+  raidTurn,
+  restoreRaid,
+  type RaidSession,
+} from "@/app/battle/raid-engine";
 
 export interface Proof {
   phase: "authorizing" | "confirming" | "success" | "failed";
@@ -47,6 +53,7 @@ export interface GameSnapshot {
   proof: Proof | null;
   cardsRaw: string;
   team: string[];
+  raidSession: RaidSession | null;
 }
 const initial: GameSnapshot = {
   accountId: null,
@@ -66,6 +73,7 @@ const initial: GameSnapshot = {
   proof: null,
   cardsRaw: "[]",
   team: [],
+  raidSession: null,
 };
 let state: GameSnapshot = initial;
 const listeners = new Set<() => void>();
@@ -98,6 +106,20 @@ let busy = false;
 let refreshSequence = 0;
 let refreshPromise: Promise<void> | null = null;
 const historyKey = (account: string) => `scanmon:testnet:${account}:history:v2`;
+const raidKey = (account: string) =>
+  `scanmon:testnet:${GAME_ID}:${account}:raid:v3`;
+function loadRaid(account: string) {
+  try {
+    return restoreRaid(localStorage.getItem(raidKey(account)));
+  } catch {
+    return null;
+  }
+}
+function persistRaid(session: RaidSession) {
+  if (!state.accountId) throw new Error("Connect a wallet first.");
+  localStorage.setItem(raidKey(state.accountId), JSON.stringify(session));
+  publish({ raidSession: session });
+}
 const teamKey = (account: string) => `scanmon:testnet:${account}:team:v2`;
 function stored<T>(key: string, fallback: T): T {
   try {
@@ -174,6 +196,7 @@ export function setWallet(
     cardsRaw: "[]",
     history,
     team,
+    raidSession: accountId ? loadRaid(accountId) : null,
     error: null,
     proof: null,
     loading: !!accountId,
@@ -326,7 +349,9 @@ export async function transact(
         ? ["trade", "listing_bought"]
         : kind === "faucet"
           ? ["payout"]
-          : undefined,
+          : kind === "boss"
+            ? ["boss_reward"]
+            : undefined,
     );
     const tx: ChainTx = { ...intent, hash, status: "success" };
     record(tx);
@@ -387,7 +412,9 @@ export async function recoverRedirect() {
             ? ["trade", "listing_bought"]
             : intent.kind === "faucet"
               ? ["payout"]
-              : undefined,
+              : intent.kind === "boss"
+                ? ["boss_reward"]
+                : undefined,
         );
         record({ ...intent, hash, status: "success" });
         publish({
@@ -436,7 +463,9 @@ export async function reconcilePending() {
           ? ["trade", "listing_bought"]
           : tx.kind === "faucet"
             ? ["payout"]
-            : undefined,
+            : tx.kind === "boss"
+              ? ["boss_reward"]
+              : undefined,
       );
       record({ ...tx, status: "success" });
     } catch (error) {
@@ -581,17 +610,26 @@ export async function saveTeam(ids: string[]) {
   localStorage.setItem(teamKey(state.accountId), JSON.stringify(ids));
   publish({ team: ids });
 }
+function assertRaidTeam(ids: string[]) {
+  if (!state.accountId)
+    throw new Error("Connect your NEAR wallet in Settings first.");
+  if (state.loading || !state.player)
+    throw new Error("Your cards are still loading. Try again.");
+  if (
+    ids.length !== 3 ||
+    new Set(ids).size !== 3 ||
+    ids.some((id) => !state.player!.cards.some((card) => card.token_id === id))
+  )
+    throw new Error("Choose three available owned cards.");
+}
 export async function startRaid(ids: string[]) {
-  await transact(
-    {
-      receiverId: GAME_ID,
-      methodName: "start_raid",
-      args: { team_ids: ids },
-      deposit: storageDeposit,
-    },
-    "raid",
-    "Raid started",
-  );
+  assertRaidTeam(ids);
+  const team = ids.map((instanceId) => ({
+    instanceId,
+    cardId: state.player!.cards.find((card) => card.token_id === instanceId)!
+      .card_id,
+  }));
+  persistRaid(newRaid(team, `local-raid:${crypto.randomUUID()}`));
 }
 export async function attack(input: {
   battleId: string;
@@ -599,20 +637,44 @@ export async function attack(input: {
   instanceId: string;
   skillId: string;
 }) {
-  await transact(
+  const session = state.raidSession;
+  if (
+    !session ||
+    session.battle.id !== input.battleId ||
+    session.battle.round !== input.round
+  )
+    throw new Error("This round has changed. Choose your action again.");
+  assertRaidTeam(session.team.map((card) => card.instanceId));
+  persistRaid(
+    raidTurn(session, {
+      instance_id: input.instanceId,
+      skill_id: input.skillId,
+    }),
+  );
+}
+export async function claimBossReward() {
+  const session = state.raidSession;
+  if (!session || session.battle.phase !== "won")
+    throw new Error("Defeat the boss before claiming its NFT.");
+  assertRaidTeam(session.team.map((card) => card.instanceId));
+  const tx = await transact(
     {
       receiverId: GAME_ID,
-      methodName: "attack",
+      methodName: "claim_boss_reward",
       args: {
-        battle_id: input.battleId,
-        round: input.round,
-        instance_id: input.instanceId,
-        skill_id: input.skillId,
+        team_ids: session.team.map((card) => card.instanceId),
+        actions: session.actions,
       },
+      deposit: storageDeposit,
+      gas: "250000000000000",
     },
-    "raid",
-    "Raid turn confirmed",
+    "boss",
+    "Boss NFT claimed",
+    "First-clear collectible · added to your vault",
   );
+  // A periodic read may have started before finality; get a fresh vault snapshot.
+  await refreshGame();
+  return tx;
 }
 export async function listCard(tokenId: string, price: string) {
   await transact(
@@ -667,5 +729,5 @@ export function ownedCards(): ChainCard[] {
   return state.player?.cards ?? [];
 }
 export function raid(): BattleState | null {
-  return state.player?.raid ?? null;
+  return state.raidSession?.battle ?? null;
 }

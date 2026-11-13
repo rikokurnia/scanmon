@@ -1,0 +1,24 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "codeHash": "3PGkMfVEWYzNLigKBBmdzmRkDRRjTAz4nRhPDtqPTbjc",
+  "verifiedAt": "2026-11-13T22:37:25.273Z",
+  "receipts": [
+    {
+      "step": "Upgrade game: single-claim boss NFT",
+      "hash": "A1pgyg2AHyza6snBmVNQgscpWxnxcB3NFETmkhEfXHy8"
+    },
+    {
+      "step": "Claim boss NFT: replay entire raid in one transaction",
+      "accountId": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "3DrEyxQAKrY7WRGbBEwxYGTaU6nvw7j184FzjfrHYMbi",
+      "tokenId": "card:40"
+    },
+    {
+      "step": "Retry claim: same NFT, no duplicate mint",
+      "accountId": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "HRCtcjmYSAn3QsjyS8PWqqVv56kcv7EhKrwJ1BXnHKrA",
+      "tokenId": "card:40"
+    }
+  ]
+}

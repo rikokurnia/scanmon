@@ -16,6 +16,7 @@ import {
   saveTeam,
   startRaid,
   attack,
+  claimBossReward,
 } from "./game-store";
 import { GAME_ID, displayUnits } from "./config";
 import { view } from "./rpc";
@@ -131,7 +132,19 @@ export function createChainBattleAdapter(): BattleAdapter {
         minimumTeamSize: 3,
         loading: state.loading,
         error: state.error ?? undefined,
-        battle: state.player?.raid ?? null,
+        battle: state.raidSession
+          ? {
+              ...state.raidSession.battle,
+              reward:
+                state.raidSession.battle.phase === "won" &&
+                state.player?.boss_reward_token
+                  ? {
+                      status: "granted",
+                      text: "Boss NFT claimed · open Collection to view your vault",
+                    }
+                  : undefined,
+            }
+          : null,
       };
       return snapshot;
     },
@@ -139,5 +152,8 @@ export function createChainBattleAdapter(): BattleAdapter {
     saveTeam,
     startRaid,
     attack,
+    claimReward: async () => {
+      await claimBossReward();
+    },
   };
 }

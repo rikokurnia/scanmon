@@ -12,6 +12,7 @@ export interface ChainPlayer {
   usdc_credit: string;
   discoveries: number;
   first_win: boolean;
+  boss_reward_token?: string | null;
   starter_claimed?: boolean;
   claims: string[];
   locked_ids: string[];
@@ -43,6 +44,7 @@ export type TxKind =
   | "buy"
   | "sell"
   | "loot"
+  | "boss"
   | "raid"
   | "storage"
   | "faucet"

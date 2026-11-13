@@ -44,6 +44,8 @@ export interface BattleAdapter {
   subscribe(listener: () => void): () => void;
   saveTeam(ids: string[]): Promise<void>;
   startRaid(ids: string[]): Promise<void>;
+  /** The only wallet transaction in the raid flow, after victory. */
+  claimReward?(): Promise<void>;
   attack(input: {
     battleId: string;
     round: number;

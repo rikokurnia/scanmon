@@ -106,6 +106,6 @@ export function assertSucceeded(result: Outcome, expectedEvents?: string[]) {
     )
   )
     throw new SettlementError(
-      "The purchase was refunded or did not settle. Refresh the quote and try again.",
+      "The action did not settle. Refresh your account and check the receipt before retrying.",
     );
 }

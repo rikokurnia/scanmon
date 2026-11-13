@@ -6,6 +6,7 @@ const methods: Record<string, TxKind> = {
   claim_task: "quest",
   sell_to_koban: "sell",
   claim_loot: "loot",
+  claim_boss_reward: "boss",
   start_raid: "raid",
   attack: "raid",
   storage_deposit: "storage",
