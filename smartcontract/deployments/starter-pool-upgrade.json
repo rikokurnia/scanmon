@@ -1,0 +1,35 @@
+{
+  "network": "testnet",
+  "game": "scanmon-6f49a2b600.testnet",
+  "token": "usdc.scanmon-6f49a2b600.testnet",
+  "before": {
+    "owner_id": "scanmon-6f49a2b600.testnet",
+    "usdc_contract_id": "usdc.scanmon-6f49a2b600.testnet",
+    "tomo_account_id": "tomo.scanmon-6f49a2b600.testnet",
+    "koban_account_id": "koban.scanmon-6f49a2b600.testnet",
+    "season": "v1",
+    "tomo_budget": "489000000",
+    "koban_budget": "504627270",
+    "distributed": "11000000"
+  },
+  "after": {
+    "owner_id": "scanmon-6f49a2b600.testnet",
+    "usdc_contract_id": "usdc.scanmon-6f49a2b600.testnet",
+    "tomo_account_id": "tomo.scanmon-6f49a2b600.testnet",
+    "koban_account_id": "koban.scanmon-6f49a2b600.testnet",
+    "season": "v1",
+    "tomo_budget": "489000000",
+    "koban_budget": "504627270",
+    "distributed": "11000000"
+  },
+  "receipts": [
+    {
+      "step": "Upgrade mock USDC",
+      "hash": "Pah7A71K3XLfWje1DmgUoYEXTqcPWuHBr77P1Hz19iq"
+    },
+    {
+      "step": "Upgrade game",
+      "hash": "8dNigtgsgsiE3xbwo5zQ73yf3xBpvuTXawAp1qjGcDAi"
+    }
+  ]
+}

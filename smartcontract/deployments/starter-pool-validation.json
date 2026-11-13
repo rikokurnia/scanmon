@@ -1,0 +1,28 @@
+{
+  "network": "testnet",
+  "account": "starter-qa-mwfj0z4l.scanmon-6f49a2b600.testnet",
+  "before": {
+    "owner_id": "scanmon-6f49a2b600.testnet",
+    "usdc_contract_id": "usdc.scanmon-6f49a2b600.testnet",
+    "tomo_account_id": "tomo.scanmon-6f49a2b600.testnet",
+    "koban_account_id": "koban.scanmon-6f49a2b600.testnet",
+    "season": "v1",
+    "tomo_budget": "489000000",
+    "koban_budget": "504627270",
+    "distributed": "11000000"
+  },
+  "after": {
+    "owner_id": "scanmon-6f49a2b600.testnet",
+    "usdc_contract_id": "usdc.scanmon-6f49a2b600.testnet",
+    "tomo_account_id": "tomo.scanmon-6f49a2b600.testnet",
+    "koban_account_id": "koban.scanmon-6f49a2b600.testnet",
+    "season": "v1",
+    "tomo_budget": "464000000",
+    "koban_budget": "504627270",
+    "distributed": "36000000"
+  },
+  "balance": "25000000",
+  "hash": "6E9MyhuiLEyRiaskq8Ks7o4LPR6qW4CAYHtxyvqxnxda",
+  "totalSupplyUnchanged": true,
+  "duplicateRejected": true
+}

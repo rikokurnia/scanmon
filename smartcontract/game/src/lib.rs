@@ -237,7 +237,7 @@ impl Game {
         json!({"owner_id":self.owner,"usdc_contract_id":self.usdc,"tomo_account_id":self.tomo,"koban_account_id":self.koban,"season":"v1","tomo_budget":U128(self.credit(&self.tomo)),"koban_budget":U128(self.credit(&self.koban)),"distributed":U128(self.distributed)})
     }
     pub fn get_player(&self, account_id: AccountId) -> serde_json::Value {
-        json!({"cards":self.owned.get(&account_id).unwrap_or_default().iter().filter_map(|id|self.cards.get(id)).collect::<Vec<_>>(),"shards":U128(self.shards.get(&account_id).unwrap_or(0)),"usdc_credit":U128(self.credit(&account_id)),"discoveries":self.counts.get(&account_id).unwrap_or(0),"first_win":self.claims.contains(&format!("first-win:{account_id}")),"claims":(["first","three","battle"].iter().filter(|task|self.claims.contains(&format!("task:{account_id}:{task}"))).collect::<Vec<_>>()),"locked_ids":self.owned.get(&account_id).unwrap_or_default().iter().filter(|id|self.locks.contains(id)).collect::<Vec<_>>(),"raid":self.raids.get(&account_id)})
+        json!({"cards":self.owned.get(&account_id).unwrap_or_default().iter().filter_map(|id|self.cards.get(id)).collect::<Vec<_>>(),"shards":U128(self.shards.get(&account_id).unwrap_or(0)),"usdc_credit":U128(self.credit(&account_id)),"discoveries":self.counts.get(&account_id).unwrap_or(0),"starter_claimed":self.claims.contains(&format!("starter:{account_id}")),"first_win":self.claims.contains(&format!("first-win:{account_id}")),"claims":(["first","three","battle"].iter().filter(|task|self.claims.contains(&format!("task:{account_id}:{task}"))).collect::<Vec<_>>()),"locked_ids":self.owned.get(&account_id).unwrap_or_default().iter().filter(|id|self.locks.contains(id)).collect::<Vec<_>>(),"raid":self.raids.get(&account_id)})
     }
     pub fn get_discovery(&self, account_id: AccountId, barcode: String) -> Option<Card> {
         let canonical = check_barcode(&barcode);
@@ -397,6 +397,70 @@ impl Game {
             shards: U128(0),
         })
     }
+    /// One starter grant per account, paid from the SAME global Tomo pool as quests.
+    /// No state-layout change: claims, credits, and pending payments already exist.
+    #[payable]
+    pub fn claim_starter(&mut self) -> Promise {
+        require!(
+            env::attached_deposit().as_yoctonear() >= STORAGE,
+            "Attach 0.01 NEAR storage"
+        );
+        let who = env::predecessor_account_id();
+        let key = format!("starter:{who}");
+        require!(
+            !self.claims.contains(&key),
+            "Starter USDC already claimed or pending"
+        );
+        require!(
+            !self.pending_payments.contains(&who),
+            "Payout already pending"
+        );
+        let treasury = self.tomo.clone();
+        self.debit(&treasury, 25 * UNIT);
+        self.claims.insert(&key);
+        self.pending_payments.insert(&who);
+        let payment = Payment {
+            receiver: who.clone(),
+            treasury,
+            amount: U128(25 * UNIT),
+            kind: "faucet".into(),
+            claim_key: key,
+            token_id: None,
+            shards: U128(0),
+        };
+        Promise::new(self.usdc.clone())
+            .function_call(
+                "has_faucet_claimed",
+                serde_json::to_vec(&json!({"account_id":who})).unwrap(),
+                NearToken::from_yoctonear(0),
+                Gas::from_tgas(5),
+            )
+            .then(Promise::new(env::current_account_id()).function_call(
+                "resolve_starter_eligibility",
+                serde_json::to_vec(&json!({"payment":payment})).unwrap(),
+                NearToken::from_yoctonear(0),
+                Gas::from_tgas(90),
+            ))
+    }
+    #[private]
+    pub fn resolve_starter_eligibility(&mut self, payment: Payment) -> PromiseOrValue<bool> {
+        let legacy = env::promise_result_checked(0, 1024)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<bool>(&bytes).ok());
+        self.pending_payments.remove(&payment.receiver);
+        if legacy != Some(false) {
+            self.add_credit(&payment.treasury, payment.amount.0);
+            if legacy.is_none() {
+                self.claims.remove(&payment.claim_key);
+            }
+            event(
+                "starter_rejected",
+                json!({"account_id":payment.receiver,"already_claimed":legacy==Some(true)}),
+            );
+            return PromiseOrValue::Value(false);
+        }
+        PromiseOrValue::Promise(self.pay(payment))
+    }
     #[payable]
     pub fn claim_task(&mut self, task_id: String) -> Promise {
         require!(
@@ -517,7 +581,7 @@ impl Game {
                 self.raids.insert(&payment.receiver, &raid);
             }
         }
-        if payment.kind == "quest" || payment.kind == "loot" {
+        if payment.kind == "quest" || payment.kind == "loot" || payment.kind == "faucet" {
             self.distributed += payment.amount.0;
         }
         event(
@@ -1137,5 +1201,80 @@ mod tests {
         let c = g.mint_scan("4006381333931".into());
         ctx("evil.testnet", 1);
         g.mt_transfer(account("evil2.testnet"), c.token_id, U128(1), None, None);
+    }
+    #[allow(deprecated)]
+    fn callback(result: near_sdk::PromiseResult) {
+        near_sdk::test_utils::testing_env_with_promise_results(
+            VMContextBuilder::new()
+                .current_account_id(account("game.testnet"))
+                .predecessor_account_id(account("game.testnet"))
+                .prepaid_gas(Gas::from_tgas(300))
+                .build(),
+            result,
+        );
+    }
+    fn starter(who: &str) -> Payment {
+        Payment {
+            receiver: account(who),
+            treasury: account("tomo.testnet"),
+            amount: U128(25 * UNIT),
+            kind: "faucet".into(),
+            claim_key: format!("starter:{who}"),
+            token_id: None,
+            shards: U128(0),
+        }
+    }
+    #[test]
+    fn starter_uses_one_global_pool_for_two_users() {
+        let mut g = game();
+        g.add_credit(&account("tomo.testnet"), 100 * UNIT);
+        for who in ["alice.testnet", "bob.testnet"] {
+            ctx(who, STORAGE);
+            let _ = g.claim_starter();
+            callback(near_sdk::PromiseResult::Successful(b"false".to_vec()));
+            let _ = g.resolve_starter_eligibility(starter(who));
+            callback(near_sdk::PromiseResult::Successful(vec![]));
+            assert!(g.resolve_payment(starter(who)));
+        }
+        assert_eq!(g.credit(&account("tomo.testnet")), 50 * UNIT);
+        assert_eq!(g.distributed, 50 * UNIT);
+        assert!(g.claims.contains(&"starter:alice.testnet".into()));
+        assert!(g.claims.contains(&"starter:bob.testnet".into()));
+    }
+    #[test]
+    fn failed_starter_transfer_refunds_pool_and_allows_retry() {
+        let mut g = game();
+        g.add_credit(&account("tomo.testnet"), 25 * UNIT);
+        ctx("alice.testnet", STORAGE);
+        let _ = g.claim_starter();
+        assert_eq!(g.credit(&account("tomo.testnet")), 0);
+        callback(near_sdk::PromiseResult::Successful(b"false".to_vec()));
+        let _ = g.resolve_starter_eligibility(starter("alice.testnet"));
+        callback(near_sdk::PromiseResult::Failed);
+        assert!(!g.resolve_payment(starter("alice.testnet")));
+        assert_eq!(g.credit(&account("tomo.testnet")), 25 * UNIT);
+        assert_eq!(g.distributed, 0);
+        assert!(!g.claims.contains(&"starter:alice.testnet".into()));
+    }
+    #[test]
+    fn legacy_faucet_cannot_claim_again_from_pool() {
+        let mut g = game();
+        g.add_credit(&account("tomo.testnet"), 25 * UNIT);
+        ctx("alice.testnet", STORAGE);
+        let _ = g.claim_starter();
+        callback(near_sdk::PromiseResult::Successful(b"true".to_vec()));
+        let result = g.resolve_starter_eligibility(starter("alice.testnet"));
+        assert!(matches!(result, PromiseOrValue::Value(false)));
+        assert_eq!(g.credit(&account("tomo.testnet")), 25 * UNIT);
+        assert_eq!(g.distributed, 0);
+    }
+    #[test]
+    #[should_panic(expected = "already claimed")]
+    fn duplicate_starter_claim_is_rejected() {
+        let mut g = game();
+        g.add_credit(&account("tomo.testnet"), 100 * UNIT);
+        ctx("alice.testnet", STORAGE);
+        let _ = g.claim_starter();
+        let _ = g.claim_starter();
     }
 }

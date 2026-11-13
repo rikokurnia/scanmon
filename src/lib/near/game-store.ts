@@ -203,30 +203,43 @@ export async function refreshGame() {
       return;
     }
     try {
-      const [config, shop, listings, player, balance, usdc, registration] =
-        await Promise.all([
-          view<ChainConfig>(GAME_ID, "get_config"),
-          view<ShopItem[]>(GAME_ID, "get_shop"),
-          view<ChainListing[]>(GAME_ID, "get_listings"),
-          account
-            ? view<ChainPlayer>(GAME_ID, "get_player", { account_id: account })
-            : null,
-          account
-            ? rpc<{ amount: string }>("query", {
-                request_type: "view_account",
-                account_id: account,
-                finality: "final",
-              }).catch(() => ({ amount: "0" }))
-            : null,
-          account
-            ? view<string>(USDC_ID, "ft_balance_of", { account_id: account })
-            : null,
-          account
-            ? view<unknown>(USDC_ID, "storage_balance_of", {
-                account_id: account,
-              })
-            : null,
-        ]);
+      const [
+        config,
+        shop,
+        listings,
+        player,
+        balance,
+        usdc,
+        registration,
+        legacyStarter,
+      ] = await Promise.all([
+        view<ChainConfig>(GAME_ID, "get_config"),
+        view<ShopItem[]>(GAME_ID, "get_shop"),
+        view<ChainListing[]>(GAME_ID, "get_listings"),
+        account
+          ? view<ChainPlayer>(GAME_ID, "get_player", { account_id: account })
+          : null,
+        account
+          ? rpc<{ amount: string }>("query", {
+              request_type: "view_account",
+              account_id: account,
+              finality: "final",
+            }).catch(() => ({ amount: "0" }))
+          : null,
+        account
+          ? view<string>(USDC_ID, "ft_balance_of", { account_id: account })
+          : null,
+        account
+          ? view<unknown>(USDC_ID, "storage_balance_of", {
+              account_id: account,
+            })
+          : null,
+        account && IS_MOCK_USDC
+          ? view<boolean>(USDC_ID, "has_faucet_claimed", {
+              account_id: account,
+            }).catch(() => false)
+          : false,
+      ]);
       if (seq !== refreshSequence) return;
       const cards: ScanResult[] = (player?.cards ?? []).map((c) => ({
         id: c.token_id,
@@ -237,7 +250,12 @@ export async function refreshGame() {
         config,
         shop,
         listings,
-        player,
+        player: player
+          ? {
+              ...player,
+              starter_claimed: !!player.starter_claimed || !!legacyStarter,
+            }
+          : player,
         near: balance?.amount ?? null,
         usdc,
         usdcRegistered: !!registration,
@@ -304,7 +322,11 @@ export async function transact(
     const final = await finalTransaction(hash, accountId);
     assertSucceeded(
       final,
-      kind === "buy" ? ["trade", "listing_bought"] : undefined,
+      kind === "buy"
+        ? ["trade", "listing_bought"]
+        : kind === "faucet"
+          ? ["payout"]
+          : undefined,
     );
     const tx: ChainTx = { ...intent, hash, status: "success" };
     record(tx);
@@ -361,7 +383,11 @@ export async function recoverRedirect() {
       try {
         assertSucceeded(
           await finalTransaction(hash, intent.accountId),
-          intent.kind === "buy" ? ["trade", "listing_bought"] : undefined,
+          intent.kind === "buy"
+            ? ["trade", "listing_bought"]
+            : intent.kind === "faucet"
+              ? ["payout"]
+              : undefined,
         );
         record({ ...intent, hash, status: "success" });
         publish({
@@ -406,7 +432,11 @@ export async function reconcilePending() {
     try {
       assertSucceeded(
         await finalTransaction(tx.hash, tx.accountId),
-        tx.kind === "buy" ? ["trade", "listing_bought"] : undefined,
+        tx.kind === "buy"
+          ? ["trade", "listing_bought"]
+          : tx.kind === "faucet"
+            ? ["payout"]
+            : undefined,
       );
       record({ ...tx, status: "success" });
     } catch (error) {
@@ -432,14 +462,23 @@ async function registerUsdc() {
   );
 }
 export async function faucet() {
+  if (state.player?.starter_claimed)
+    throw new Error("Your 25 USDC starter grant is already claimed.");
+  if (state.config && BigInt(state.config.tomo_budget) < BigInt(25000000))
+    throw new Error("Tomo’s shared pool has less than 25 USDC available.");
   if (!IS_MOCK_USDC)
     throw new Error("Use Circle’s official testnet faucet for this token.");
   await registerUsdc();
   return transact(
-    { receiverId: USDC_ID, methodName: "faucet", args: {} },
+    {
+      receiverId: GAME_ID,
+      methodName: "claim_starter",
+      args: {},
+      deposit: storageDeposit,
+    },
     "faucet",
     "Test USDC received",
-    "25 USDC.mock · testnet only · no cash value",
+    "25 USDC from Tomo’s shared testnet pool",
   );
 }
 export async function mintCard(result: ScanResult) {

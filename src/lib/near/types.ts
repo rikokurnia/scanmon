@@ -12,6 +12,7 @@ export interface ChainPlayer {
   usdc_credit: string;
   discoveries: number;
   first_win: boolean;
+  starter_claimed?: boolean;
   claims: string[];
   locked_ids: string[];
   raid: BattleState | null;

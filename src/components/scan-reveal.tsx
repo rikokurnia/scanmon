@@ -279,7 +279,7 @@ export default function ScanReveal({
                 }}
               >
                 <Image
-                  src="/assets/reveal/mystery.png"
+                  src="/assets/reveal/mystery-clean.png"
                   alt="Mystery monster sticker with a barcode and curled upper-right corner"
                   fill
                   unoptimized
@@ -292,6 +292,7 @@ export default function ScanReveal({
                     )
                   }
                 />
+                <span className="mystery-barcode">{result.barcode}</span>
               </div>
               {geometry && (
                 <div
@@ -302,7 +303,7 @@ export default function ScanReveal({
                   }}
                 >
                   <Image
-                    src="/assets/reveal/mystery.png"
+                    src="/assets/reveal/mystery-clean.png"
                     alt=""
                     fill
                     unoptimized
@@ -342,37 +343,34 @@ export default function ScanReveal({
             </>
           )}
         </div>
-        {phase === "revealed" && (
-          <div className="reveal-chain-action">
-            <p>
-              {minted
-                ? "Owned on NEAR · synced to your Collection"
-                : "Make this discovery yours on NEAR."}
+        <div className="reveal-status">
+          {phase === "revealed" && (
+            <div className="reveal-chain-action">
+              <p>
+                {minted
+                  ? "Owned on NEAR · synced to your Collection"
+                  : "Make this discovery yours on NEAR."}
+              </p>
+              {!minted && (
+                <button
+                  disabled={minting}
+                  onClick={() => (game.accountId ? void save() : onConnect())}
+                >
+                  {minting
+                    ? "Minting…"
+                    : game.accountId
+                      ? "Mint card on NEAR"
+                      : "Connect to mint"}
+                </button>
+              )}
+            </div>
+          )}
+          {error && (
+            <p className="reveal-note" role="alert">
+              {error}
             </p>
-            {!minted && (
-              <button
-                disabled={minting}
-                onClick={() => (game.accountId ? void save() : onConnect())}
-              >
-                {minting
-                  ? "Minting…"
-                  : game.accountId
-                    ? "Mint card on NEAR"
-                    : "Connect to mint"}
-              </button>
-            )}
-          </div>
-        )}
-        {!ready && !error && (
-          <p className="reveal-note" role="status">
-            Loading…
-          </p>
-        )}
-        {error && (
-          <p className="reveal-note" role="alert">
-            {error}
-          </p>
-        )}
+          )}
+        </div>
       </section>
     </div>
   );

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   useGame,
@@ -155,24 +156,10 @@ export default function SettingsModal({
               <div className="account-balances">
                 <div>
                   <TokenIcon token="usdc" />
-                  <span>{IS_MOCK_USDC ? "USDC.mock" : "USDC"}</span>
+                  <span>USDC</span>
                   <strong>
                     {game.usdc === null ? "—" : displayUnits(game.usdc)}
                   </strong>
-                </div>
-                <div>
-                  <TokenIcon token="near" />
-                  <span>NEAR</span>
-                  <strong>
-                    {game.near === null ? "—" : displayUnits(game.near, 24, 4)}
-                  </strong>
-                </div>
-                <div>
-                  <span className="shard-icon" aria-hidden="true">
-                    ◆
-                  </span>
-                  <span>Shards</span>
-                  <strong>{game.player?.shards ?? "—"}</strong>
                 </div>
               </div>
               {game.player && BigInt(game.player.usdc_credit) > BigInt(0) && (
@@ -204,18 +191,16 @@ export default function SettingsModal({
               {IS_MOCK_USDC && (
                 <button
                   className="chain-primary"
-                  disabled={busy}
+                  disabled={busy || game.player?.starter_claimed}
                   onClick={() => void perform(faucet)}
                 >
-                  {busy ? "Working…" : "Get 25 test USDC"}
+                  {busy
+                    ? "Working…"
+                    : game.player?.starter_claimed
+                      ? "25 USDC claimed"
+                      : "Get 25 USDC"}
                 </button>
               )}
-              <p className="chain-fine">
-                {IS_MOCK_USDC
-                  ? "USDC.mock is a test token with no cash value. One faucet claim per account."
-                  : "Circle-issued testnet USDC. Get test tokens from Circle’s faucet."}{" "}
-                NEAR pays gas and contract storage.
-              </p>
             </>
           ) : (
             <>
@@ -236,7 +221,14 @@ export default function SettingsModal({
                     connectGoogle();
                   }}
                 >
-                  <span aria-hidden="true">G</span> Continue with Google
+                  <Image
+                    src="/assets/icons/google.png"
+                    width={23}
+                    height={23}
+                    alt=""
+                    unoptimized
+                  />{" "}
+                  Continue with Google
                 </button>
               )}
               <button
@@ -311,7 +303,7 @@ export default function SettingsModal({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      View on NEAR Explorer ↗
+                      <TokenIcon token="near" /> View on NEAR Explorer ↗
                     </a>
                   </li>
                 ))}

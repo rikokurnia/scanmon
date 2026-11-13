@@ -8,8 +8,8 @@ use near_contract_standards::{
     storage_management::{StorageBalance, StorageBalanceBounds, StorageManagement},
 };
 use near_sdk::{
-    assert_one_yocto, collections::LookupSet, env, json_types::U128, near, AccountId, NearToken,
-    PanicOnDefault, PromiseOrValue,
+    collections::LookupSet, env, json_types::U128, near, AccountId, NearToken, PanicOnDefault,
+    PromiseOrValue,
 };
 
 /// Testnet-only NEP-141 USDC mock. Never represents Circle-issued money.
@@ -38,20 +38,10 @@ impl MockUsdc {
     }
     #[payable]
     pub fn faucet(&mut self) {
-        assert_one_yocto();
-        let who = env::predecessor_account_id();
-        assert!(
-            self.token.accounts.contains_key(&who),
-            "Register storage first"
-        );
-        assert!(self.faucets.insert(&who), "Faucet already claimed");
-        self.token.internal_deposit(&who, 25_000_000);
-        near_contract_standards::fungible_token::events::FtMint {
-            owner_id: &who,
-            amount: U128(25_000_000),
-            memo: Some("TESTNET MOCK: one-time faucet"),
-        }
-        .emit();
+        env::panic_str("Claim starter USDC through the game contract");
+    }
+    pub fn has_faucet_claimed(&self, account_id: AccountId) -> bool {
+        self.faucets.contains(&account_id)
     }
     /// Bootstrap the two finite game agent budgets, only by deployment owner.
     pub fn mint(&mut self, account_id: AccountId, amount: U128) {

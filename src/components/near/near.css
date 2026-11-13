@@ -479,3 +479,101 @@
     gap: 0;
   }
 }
+/* Same warm wooden surface as Tomo; settings controls retain their existing layout. */
+.settings-dialog {
+  background-color: #bf8149;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 45px,
+      #66361e70 46px,
+      #f9c07a65 48px,
+      transparent 50px
+    ),
+    repeating-linear-gradient(
+      2deg,
+      #b7783e00 0 5px,
+      #693b2017 6px,
+      transparent 8px
+    ),
+    linear-gradient(95deg, #be7a41, #d49556 25%, #b7753d 65%, #c88a4e);
+  box-shadow:
+    inset 0 0 0 2px #e3a563,
+    0 8px 0 #192546,
+    0 20px 80px #19254640;
+}
+.settings-dialog [role="tabpanel"] {
+  background: #fff8e8ed;
+  border: 1px solid #75442688;
+  border-radius: 16px;
+  margin-top: 14px;
+  padding: 14px;
+}
+.settings-dialog .google-connect img {
+  border-radius: 50%;
+}
+.tx-list a,
+.history-toolbar > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tx-list a img {
+  width: 17px;
+  height: 17px;
+}
+.reveal-status {
+  position: absolute;
+  top: 130%;
+  left: 0;
+  right: 0;
+}
+.reveal-status .reveal-chain-action {
+  position: relative;
+  inset: auto;
+}
+.reveal-status .reveal-note {
+  position: relative;
+  inset: auto;
+  margin: 10px 0 0;
+}
+.tx-proof.tx-proof-reveal {
+  position: fixed;
+  margin: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(min(100vw, 480px) - 32px);
+  padding: 12px;
+  border-radius: 16px;
+}
+.tx-proof-reveal::backdrop {
+  background: #071b2410;
+  backdrop-filter: none;
+}
+.tx-proof-reveal .proof-stamp,
+.tx-proof-reveal > .chain-kicker {
+  display: none;
+}
+.tx-proof-reveal h2 {
+  font-size: 18px;
+  margin: 6px 0;
+}
+.tx-proof-reveal p {
+  font-size: 11px;
+  margin: 5px 0;
+}
+.tx-proof-reveal .tx-hash {
+  margin: 6px 0;
+  padding: 6px;
+  font-size: 9px;
+}
+.tx-proof-reveal .chain-secondary,
+.tx-proof-reveal .chain-primary {
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 8px;
+  font-size: 12px;
+}
+body:has(.tx-proof-reveal[open]) .reveal-status {
+  visibility: hidden;
+}

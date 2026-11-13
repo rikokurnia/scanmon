@@ -10,6 +10,7 @@ const methods: Record<string, TxKind> = {
   attack: "raid",
   storage_deposit: "storage",
   faucet: "faucet",
+  claim_starter: "faucet",
   list_card: "list",
   cancel_listing: "cancel",
   withdraw_usdc: "withdraw",

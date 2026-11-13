@@ -9,6 +9,23 @@ export default function TxProof() {
   useEffect(() => {
     if (proof && !dialog.current?.open) dialog.current?.showModal();
     if (!proof) dialog.current?.close();
+    const canvas = document.querySelector(".reveal-canvas");
+    const receipt = dialog.current;
+    if (receipt) {
+      receipt.classList.toggle("tx-proof-reveal", !!canvas);
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const top = rect.bottom + rect.height * 0.3;
+        const bottom =
+          document.querySelector(".bottom-nav")?.getBoundingClientRect().top ??
+          innerHeight;
+        receipt.style.top = `${top}px`;
+        receipt.style.maxHeight = `${Math.max(90, bottom - top - 12)}px`;
+      } else {
+        receipt.style.top = "";
+        receipt.style.maxHeight = "";
+      }
+    }
   }, [proof]);
   if (!proof) return null;
   const pending = proof.phase === "authorizing" || proof.phase === "confirming";

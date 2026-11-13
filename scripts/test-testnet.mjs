@@ -114,7 +114,8 @@ try {
     }
     for (const who of [alice]) {
       await register(who);
-      if (BigInt(await balance(who)) === 0n) await call(who, usdc, "faucet");
+      if (BigInt(await balance(who)) === 0n)
+        await call(who, game, "claim_starter", {}, storage);
     }
     for (const barcode of ["4006381333931", "036000291452", "9780201379624"])
       await call(alice, game, "mint_scan", { barcode }, storage);
@@ -170,10 +171,18 @@ try {
       );
     }
     await register(bob);
-    if (BigInt(await balance(bob)) === 0n) await call(bob, usdc, "faucet");
+    if (BigInt(await balance(bob)) === 0n)
+      await call(bob, game, "claim_starter", {}, storage);
     if (!(await player(bob)).claims.includes("first"))
       await call(bob, game, "claim_task", { task_id: "first" }, storage);
-    await reject("mock faucet is one-time", alice, usdc, "faucet");
+    await reject(
+      "starter grant is one-time",
+      alice,
+      game,
+      "claim_starter",
+      {},
+      storage,
+    );
     const q = await view(game, "quote", {
       card_id: "pikachu",
       direction: "buy",

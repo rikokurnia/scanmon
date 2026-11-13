@@ -1192,3 +1192,95 @@ h1 {
   font-weight: 800;
   flex: none;
 }
+.tomo-bubble {
+  top: -25px;
+  width: max-content;
+  min-width: 78px;
+  min-height: 28px;
+  max-width: 190px;
+}
+.tomo-bubble .tomo-typed {
+  color: var(--navy);
+  white-space: nowrap;
+}
+.tomo-typed i {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--navy);
+  vertical-align: -1px;
+}
+.balance-track > span {
+  display: block;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(#86f5d7, #28d6a0);
+  border-radius: inherit;
+  transition: width 0.65s ease;
+  overflow: hidden;
+}
+.balance-track.distributed > span {
+  background: linear-gradient(#ffe9a1, #ffd34e);
+}
+.balance-track > span:after,
+.scan-button:after {
+  content: "";
+  position: absolute;
+  inset: -30% -70%;
+  background: linear-gradient(
+    110deg,
+    transparent 38%,
+    #fff9 49%,
+    transparent 60%
+  );
+  pointer-events: none;
+  transform: translateX(-70%);
+}
+.scan-button {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tomo-bubble {
+    animation: tomo-float 3s ease-in-out infinite;
+  }
+  .tomo-typed i {
+    animation: cursor-blink 0.8s steps(1) infinite;
+  }
+  .balance-track > span:after,
+  .scan-button:after {
+    animation: control-shine 3.6s ease-in-out infinite;
+  }
+  @keyframes tomo-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  @keyframes cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes control-shine {
+    0%,
+    15% {
+      transform: translateX(-70%);
+    }
+    55%,
+    100% {
+      transform: translateX(70%);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .balance-track > span {
+    transition: none;
+  }
+  .tomo-typed i {
+    display: none;
+  }
+}

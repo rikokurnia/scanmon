@@ -1,4 +1,6 @@
 "use client";
+import TomoSpeech from "./tomo-speech";
+import { budgetPercent } from "@/lib/near/budget";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -24,6 +26,12 @@ export function TokenIcon({ token }: { token: "near" | "usdc" }) {
 export default function TomoCompanion({ onScan }: { onScan: () => void }) {
   const router = useRouter();
   const game = useGame();
+  const remaining = game.config
+    ? budgetPercent(game.config.tomo_budget, game.config.distributed)
+    : 0;
+  const paid = game.config
+    ? budgetPercent(game.config.distributed, game.config.tomo_budget)
+    : 0;
   const firstWin = game.player?.first_win;
   const [claiming, setClaiming] = useState<string | null>(null);
   const [claimError, setClaimError] = useState("");
@@ -295,7 +303,7 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                     role="img"
                     aria-label="Agent funding is read from the game contract"
                   >
-                    <span />
+                    <span style={{ width: `${remaining}%` }} />
                   </div>
                   <p>
                     {game.config && BigInt(game.config.tomo_budget) > BigInt(0)
@@ -319,7 +327,7 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                     role="img"
                     aria-label="Confirmed USDC distributed on-chain"
                   >
-                    <span />
+                    <span style={{ width: `${paid}%` }} />
                   </div>
                   <p>Verified payouts will be tracked here.</p>
                 </section>
@@ -369,11 +377,7 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {!open && (
-          <span className="tomo-bubble">
-            Tasks <span aria-hidden="true">✦</span>
-          </span>
-        )}
+        {!open && <TomoSpeech />}
         <Image
           className="tomo-animated"
           src="/assets/companion/tomo-near-wave.gif"
