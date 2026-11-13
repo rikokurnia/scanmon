@@ -9,17 +9,24 @@ import {
 } from "react";
 import type { ScanResult } from "@/lib/scan-result";
 import { resolveRevealAssets } from "@/lib/scan-result";
-import { addRevealedCard } from "@/lib/reveal-collection";
+import { mintCard, useGame } from "@/lib/near/game-store";
 import { peelGeometry } from "@/lib/peel";
 import "./scan-reveal.css";
 export default function ScanReveal({
   result,
   onClose,
+  onConnect,
 }: {
   result: ScanResult;
   onClose: () => void;
+  onConnect: () => void;
 }) {
   const assets = resolveRevealAssets(result);
+  const game = useGame();
+  const [minting, setMinting] = useState(false);
+  const minted = game.player?.cards.some(
+    (card) => card.barcode === result.barcode,
+  );
   const stage = useRef<HTMLDivElement>(null),
     corner = useRef<HTMLButtonElement>(null),
     closeButton = useRef<HTMLButtonElement>(null);
@@ -54,12 +61,22 @@ export default function ScanReveal({
     point.current = { x, y };
     setGeometry(peelGeometry(box.width, box.height, x, y));
   }
-  function save() {
+  async function save() {
+    if (minting || minted) return;
+    if (!game.accountId) {
+      setError("Connect in Settings to mint this discovery on NEAR.");
+      return;
+    }
+    setMinting(true);
     try {
-      addRevealedCard(result);
+      await mintCard(result);
       setError("");
-    } catch {
-      setError("Couldn’t save this card. Try again.");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Mint failed. Try again.",
+      );
+    } finally {
+      setMinting(false);
     }
   }
   function finish() {
@@ -74,7 +91,7 @@ export default function ScanReveal({
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const end = () => {
       setPhase("revealed");
-      save();
+      void save();
       closeButton.current?.focus();
     };
     if (reduced) {
@@ -325,6 +342,27 @@ export default function ScanReveal({
             </>
           )}
         </div>
+        {phase === "revealed" && (
+          <div className="reveal-chain-action">
+            <p>
+              {minted
+                ? "Owned on NEAR · synced to your Collection"
+                : "Make this discovery yours on NEAR."}
+            </p>
+            {!minted && (
+              <button
+                disabled={minting}
+                onClick={() => (game.accountId ? void save() : onConnect())}
+              >
+                {minting
+                  ? "Minting…"
+                  : game.accountId
+                    ? "Mint card on NEAR"
+                    : "Connect to mint"}
+              </button>
+            )}
+          </div>
+        )}
         {!ready && !error && (
           <p className="reveal-note" role="status">
             Loading…
@@ -333,7 +371,6 @@ export default function ScanReveal({
         {error && (
           <p className="reveal-note" role="alert">
             {error}
-            {phase === "revealed" && <button onClick={save}>Retry save</button>}
           </p>
         )}
       </section>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import GameProvider from "@/components/near/game-provider";
 import ScanShell from "@/components/scan-shell";
 import "./globals.css";
 export const metadata: Metadata = {
@@ -18,7 +19,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ScanShell>{children}</ScanShell>
+        <GameProvider
+          privyAppId={
+            process.env.APP_ID_PRIVY ??
+            process.env.NEXT_PUBLIC_PRIVY_APP_ID ??
+            ""
+          }
+        >
+          <ScanShell
+            googleEnabled={
+              !!(
+                process.env.APP_ID_PRIVY ?? process.env.NEXT_PUBLIC_PRIVY_APP_ID
+              )
+            }
+          >
+            {children}
+          </ScanShell>
+        </GameProvider>
       </body>
     </html>
   );

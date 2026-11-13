@@ -1,17 +1,19 @@
 "use client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
+import { useGame, claimTask } from "@/lib/near/game-store";
 import {
-  getHuntSnapshot,
-  getBattleTaskSnapshot,
-  readScans,
-  subscribeHunt,
-} from "@/lib/hunt-progress";
+  displayUnits,
+  explorerAccount,
+  explorerTx,
+  GAME_ID,
+} from "@/lib/near/config";
 export function TokenIcon({ token }: { token: "near" | "usdc" }) {
   return (
     <Image
-      src={`/assets/tokens/${token}.svg`}
+      src={`/assets/tokens/${token}-original.png`}
+      className="token-logo"
       width={22}
       height={22}
       alt={token === "near" ? "NEAR" : "USDC"}
@@ -21,19 +23,33 @@ export function TokenIcon({ token }: { token: "near" | "usdc" }) {
 }
 export default function TomoCompanion({ onScan }: { onScan: () => void }) {
   const router = useRouter();
-  const firstWin = useSyncExternalStore(
-    subscribeHunt,
-    getBattleTaskSnapshot,
-    () => "",
+  const game = useGame();
+  const firstWin = game.player?.first_win;
+  const [claiming, setClaiming] = useState<string | null>(null);
+  const [claimError, setClaimError] = useState("");
+  const lastReward = game.history.find(
+    (tx) => tx.kind === "quest" && tx.status === "success",
   );
+  async function claim(id: string) {
+    if (claiming) return;
+    setClaiming(id);
+    setClaimError("");
+    try {
+      await claimTask(id);
+    } catch (error) {
+      setClaimError(
+        error instanceof Error ? error.message : "Claim failed. Try again.",
+      );
+    } finally {
+      setClaiming(null);
+    }
+  }
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"tasks" | "about">("tasks");
   const tasksRef = useRef<HTMLButtonElement>(null);
   const aboutRef = useRef<HTMLButtonElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const count = readScans(
-    useSyncExternalStore(subscribeHunt, getHuntSnapshot, () => "[]"),
-  ).length;
+  const count = game.player?.discoveries ?? 0;
   const tasks = [
     {
       id: "first",
@@ -131,6 +147,7 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
               <div className="task-list">
                 {tasks.map((task) => {
                   const complete = task.count >= task.goal;
+                  const claimed = game.player?.claims.includes(task.id);
                   const battle = task.id === "battle";
                   return (
                     <article
@@ -170,10 +187,21 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                         {complete ? (
                           <button
                             className="task-action claim"
-                            disabled
-                            title="Reward claims open when the agent contract is connected"
+                            disabled={
+                              !!claiming ||
+                              claimed ||
+                              !game.accountId ||
+                              !game.config ||
+                              BigInt(game.config.tomo_budget) <
+                                BigInt(task.reward * 1_000_000)
+                            }
+                            onClick={() => void claim(task.id)}
                           >
-                            Claim
+                            {claimed
+                              ? "Claimed ✓"
+                              : claiming === task.id
+                                ? "Claiming…"
+                                : "Claim"}
                           </button>
                         ) : battle ? (
                           <button
@@ -201,15 +229,34 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                   );
                 })}
               </div>
+              {claimError && (
+                <p className="chain-error" role="alert">
+                  {claimError}
+                </p>
+              )}
               <div className="reward-proof">
                 <TokenIcon token="near" />
                 <p>
-                  <strong>No verified payouts yet.</strong> A NEAR receipt will
-                  appear here after USDC is sent to you.
+                  {lastReward ? (
+                    <a
+                      href={explorerTx(lastReward.hash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View your latest reward on NEAR Explorer ↗
+                    </a>
+                  ) : (
+                    <>
+                      <strong>No verified payouts yet.</strong> Your receipt
+                      appears after a successful payout.
+                    </>
+                  )}
                 </p>
               </div>
               <p className="preview-notice">
-                UI preview · planned rewards · claims not live
+                {game.accountId
+                  ? "Task progress is verified by the game contract."
+                  : "Connect in Settings. Mint discoveries to complete tasks."}
               </p>
             </div>
           ) : (
@@ -227,7 +274,9 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                   <h3>Meet Tomo</h3>
                   <p>Your little NEAR companion.</p>
                 </div>
-                <span className="agent-status">Not connected</span>
+                <span className="agent-status">
+                  {game.config ? "On NEAR" : "Connecting…"}
+                </span>
               </div>
               <div className="agent-balances">
                 <section className="agent-balance">
@@ -235,30 +284,40 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
                     <TokenIcon token="usdc" />
                     <span>Agent balance</span>
                     <strong>
-                      — <small>USDC</small>
+                      {game.config
+                        ? displayUnits(game.config.tomo_budget)
+                        : "—"}{" "}
+                      <small>USDC</small>
                     </strong>
                   </div>
                   <div
                     className="balance-track"
                     role="img"
-                    aria-label="Agent funding balance unavailable"
+                    aria-label="Agent funding is read from the game contract"
                   >
                     <span />
                   </div>
-                  <p>Waiting for the agent to be funded.</p>
+                  <p>
+                    {game.config && BigInt(game.config.tomo_budget) > BigInt(0)
+                      ? "Finite USDC budget deposited on-chain."
+                      : "Rewards pause when the budget is empty."}
+                  </p>
                 </section>
                 <section className="agent-balance">
                   <div>
                     <TokenIcon token="usdc" />
                     <span>Total distributed</span>
                     <strong>
-                      — <small>USDC</small>
+                      {game.config
+                        ? displayUnits(game.config.distributed)
+                        : "—"}{" "}
+                      <small>USDC</small>
                     </strong>
                   </div>
                   <div
                     className="balance-track distributed"
                     role="img"
-                    aria-label="Distributed balance unavailable"
+                    aria-label="Confirmed USDC distributed on-chain"
                   >
                     <span />
                   </div>
@@ -268,16 +327,37 @@ export default function TomoCompanion({ onScan }: { onScan: () => void }) {
               <div className="agent-contract">
                 <TokenIcon token="near" />
                 <div>
-                  <h4>Agent contract · NEAR</h4>
-                  <p>Not deployed yet</p>
+                  <h4>Agent account · NEAR</h4>
+                  <p>
+                    {game.config ? (
+                      <a
+                        href={explorerAccount(game.config.tomo_account_id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {game.config.tomo_account_id} ↗
+                      </a>
+                    ) : (
+                      "Reading contract…"
+                    )}
+                  </p>
                 </div>
                 <span aria-hidden="true">↗</span>
               </div>
               <p className="agent-explainer">
-                Tomo will reward completed tasks from a limited USDC balance.
-                Every payment will link to its NEAR transaction.
+                Tomo rewards completed tasks from a limited USDC balance. Every
+                payment will link to its NEAR transaction.
               </p>
-              <p className="preview-notice">UI preview · no funds connected</p>
+              <p className="preview-notice">
+                <a
+                  href={explorerAccount(GAME_ID)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Game contract ↗
+                </a>{" "}
+                · NEAR testnet
+              </p>
             </div>
           )}
         </section>

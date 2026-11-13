@@ -1,0 +1,481 @@
+.chain-dialog {
+  color: #192546;
+  background: #fff9e9;
+  border: 3px solid #192546;
+  border-radius: 26px;
+  width: calc(100% - 32px);
+  max-width: 420px;
+  max-height: 85dvh;
+  padding: 22px;
+  box-shadow:
+    0 8px 0 #192546,
+    0 20px 80px #19254640;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-family: inherit;
+}
+.chain-dialog::backdrop {
+  background: #111a37a8;
+  backdrop-filter: blur(5px);
+}
+.chain-dialog h2 {
+  font-family: var(--font-display, "Baloo 2"), sans-serif;
+  font-size: 32px;
+  line-height: 1.1;
+  margin: 14px 0 18px;
+}
+.chain-dialog p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.chain-dialog-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.chain-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  font-weight: 900;
+}
+.chain-close {
+  border: 2px solid #192546;
+  border-radius: 50%;
+  background: #fff1ce;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  font-size: 25px;
+  cursor: pointer;
+}
+.settings-tabs {
+  display: flex;
+  border: 2px solid #192546;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: #fff1ce;
+}
+.settings-tabs button {
+  flex: 1;
+  min-height: 46px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+.settings-tabs button[aria-selected="true"] {
+  background: #b7e3ff;
+  box-shadow: inset 0 -3px 0 #192546;
+}
+.network-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 20px;
+  background: #dcf7ed;
+  padding: 7px 10px;
+}
+.network-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a474;
+}
+.connected-wallet {
+  margin: 17px 0;
+}
+.connected-wallet > span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  font-weight: 900;
+  opacity: 0.65;
+  margin-bottom: 7px;
+}
+.connected-wallet > a {
+  font-size: 15px;
+  display: block;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  color: inherit;
+}
+.chain-text-button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 44px;
+  cursor: pointer;
+  color: #284477;
+}
+.account-balances {
+  display: grid;
+  gap: 9px;
+  margin: 15px 0;
+}
+.account-balances > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid #1925461f;
+  background: white;
+  border-radius: 14px;
+  padding: 13px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.account-balances strong {
+  margin-left: auto;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.token-logo {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+}
+.shard-icon {
+  background: #c9b9ff;
+  border-radius: 50%;
+  color: #6a42b5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+.chain-primary,
+.chain-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  border: 2px solid #192546;
+  border-radius: 13px;
+  min-height: 46px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+  color: #192546;
+  cursor: pointer;
+  margin: 10px 0;
+  background: #ffd34e;
+  box-shadow: 0 3px 0 #192546;
+}
+.chain-secondary {
+  background: #fff1ce;
+  box-shadow: none;
+}
+.chain-primary:disabled,
+.chain-secondary:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.chain-fine {
+  font-size: 11px !important;
+  opacity: 0.7;
+}
+.wallet-actions {
+  display: flex;
+  gap: 8px;
+}
+.wallet-actions button {
+  font-size: 11px;
+  padding: 9px;
+}
+.wallet-welcome {
+  text-align: center;
+  padding: 24px 3px 8px;
+}
+.wallet-welcome .token-logo {
+  width: 48px;
+  height: 48px;
+}
+.wallet-welcome h3 {
+  font-size: 21px;
+  margin: 12px 0 8px;
+}
+.google-connect > span {
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #4285f4;
+}
+.chain-error {
+  background: #ffebe0;
+  border: 1px solid #d97c68;
+  border-radius: 12px;
+  padding: 10px;
+  overflow-wrap: anywhere;
+  color: #893b2c;
+}
+.chain-empty {
+  text-align: center;
+  padding: 30px 6px;
+  opacity: 0.65;
+}
+.history-intro {
+  margin-top: 0;
+}
+.history-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+.history-toolbar a {
+  color: #284477;
+  font-weight: 800;
+}
+.tx-list {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: grid;
+  gap: 11px;
+}
+.tx-list li {
+  border: 2px solid #19254620;
+  background: white;
+  padding: 13px;
+  border-radius: 14px;
+}
+.tx-list li > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 9px;
+}
+.tx-kind,
+.tx-status {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: capitalize;
+  border-radius: 20px;
+  padding: 4px 8px;
+  background: #e9effa;
+}
+.status-success {
+  background: #dcf7ed;
+  color: #137456;
+}
+.status-failed {
+  background: #ffebe0;
+  color: #893b2c;
+}
+.status-pending {
+  background: #fff1ce;
+  color: #815a13;
+}
+.tx-list strong {
+  display: block;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.tx-list time {
+  display: block;
+  font-size: 10px;
+  opacity: 0.6;
+  margin: 4px 0 8px;
+}
+.tx-list a {
+  font-size: 11px;
+  color: #284477;
+  font-weight: 900;
+}
+.tx-proof {
+  text-align: center;
+}
+.tx-proof .chain-kicker {
+  justify-content: center;
+}
+.proof-stamp {
+  width: 68px;
+  height: 68px;
+  border: 3px solid #192546;
+  background: #28d6a0;
+  box-shadow: 0 4px 0 #192546;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 25px auto;
+  font-size: 35px;
+  font-weight: 900;
+}
+.proof-stamp.is-pending {
+  background: #ffd34e;
+}
+.tx-proof h2 {
+  font-size: 27px;
+}
+.tx-hash {
+  display: block;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  background: #1925460a;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 18px 0;
+}
+.scan-manual {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
+  z-index: 5;
+  color: #192546;
+  background: #fff9e9;
+  border: 2px solid #192546;
+  border-radius: 14px;
+  padding: 10px;
+  font-size: 12px;
+}
+.scan-manual summary {
+  min-height: 28px;
+  cursor: pointer;
+  font-weight: 900;
+}
+.scan-manual form {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+}
+.scan-manual input,
+.player-market input,
+.player-market select {
+  min-height: 44px;
+  min-width: 0;
+  border: 2px solid #192546;
+  border-radius: 10px;
+  padding: 8px;
+  font: inherit;
+  background: #fff;
+}
+.scan-manual button {
+  min-height: 44px;
+  border: 2px solid #192546;
+  border-radius: 10px;
+  background: #ffd34e;
+  font-weight: 900;
+}
+.reveal-chain-action {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+  z-index: 8;
+  background: #fff9e9;
+  border: 2px solid #192546;
+  border-radius: 14px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 4px 0 #192546;
+}
+.reveal-chain-action p {
+  margin: 0 0 5px;
+  font-size: 11px;
+}
+.reveal-chain-action button {
+  border: 0;
+  border-radius: 8px;
+  background: #ffd34e;
+  min-height: 40px;
+  width: 100%;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+.player-market {
+  background: #fff9e9;
+  border: 2px solid #192546;
+  border-radius: 20px;
+  padding: 18px;
+  margin: 16px;
+  color: #192546;
+}
+.player-market h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+.player-market p {
+  font-size: 12px;
+}
+.player-market form {
+  display: grid;
+  gap: 8px;
+}
+.player-listings {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+}
+.player-listings li {
+  background: #fff;
+  border: 1px solid #19254630;
+  padding: 12px;
+  border-radius: 12px;
+}
+.player-listings h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.player-listings small {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+}
+.player-market .chain-primary,
+.player-market .chain-secondary {
+  font-size: 12px;
+}
+.chain-claim-loot {
+  margin: 10px 0;
+}
+.chain-claim-loot button {
+  font-size: 16px;
+}
+.chain-dialog button:focus-visible,
+.chain-dialog a:focus-visible {
+  outline: 3px solid #407bcc;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .proof-stamp {
+    animation: none;
+  }
+}
+@media (max-width: 380px) {
+  .chain-dialog {
+    padding: 17px;
+  }
+  .account-balances strong {
+    font-size: 18px;
+  }
+  .wallet-actions {
+    flex-direction: column;
+    gap: 0;
+  }
+}

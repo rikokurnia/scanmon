@@ -5,3 +5,13 @@ node_modules/
 .env*
 !.env.example
 .gstack/
+
+# Contract build outputs and local credentials
+smartcontract/target/
+smartcontract/artifacts/
+.near-credentials/
+*.pem
+*.key
+
+.vercel/
+.vercel

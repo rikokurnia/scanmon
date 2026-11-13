@@ -2,7 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import SettingsModal from "./near/settings-modal";
 import { useScanner } from "./use-scanner";
 import BattleTaskSync from "./battle-task-sync";
 import ScanReveal from "./scan-reveal";
@@ -49,12 +50,18 @@ function Art({
     />
   );
 }
-export default function ScanShell({ children }: { children: React.ReactNode }) {
+export default function ScanShell({
+  children,
+  googleEnabled,
+}: {
+  children: React.ReactNode;
+  googleEnabled: boolean;
+}) {
   const path = usePathname();
   return (
     <>
       <BattleTaskSync />
-      <ShellContent key={path} path={path}>
+      <ShellContent key={path} path={path} googleEnabled={googleEnabled}>
         {children}
       </ShellContent>
     </>
@@ -63,14 +70,16 @@ export default function ScanShell({ children }: { children: React.ReactNode }) {
 function ShellContent({
   children,
   path,
+  googleEnabled,
 }: {
   children: React.ReactNode;
   path: string;
+  googleEnabled: boolean;
 }) {
   const isScan = path === "/" || path === "/scan";
   const { video, state, code, message, start, resume, result } =
     useScanner(isScan);
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const found = state === "found";
   const busy = state === "requesting";
@@ -86,7 +95,7 @@ function ShellContent({
         <div className="header-actions">
           <button
             className="help-button"
-            onClick={() => dialog.current?.showModal()}
+            onClick={() => setSettingsOpen(true)}
             aria-label="Settings"
           >
             <Art name="settings" size={44} />
@@ -215,7 +224,7 @@ function ShellContent({
                   role={state === "error" ? "alert" : "status"}
                 >
                   {message}{" "}
-                  <button onClick={() => dialog.current?.showModal()}>
+                  <button onClick={() => setSettingsOpen(true)}>
                     Open settings
                   </button>
                 </div>
@@ -225,6 +234,7 @@ function ShellContent({
         )}
         {isScan && revealing && result && (
           <ScanReveal
+            onConnect={() => setSettingsOpen(true)}
             result={result}
             onClose={() => {
               setRevealing(false);
@@ -237,7 +247,10 @@ function ShellContent({
       </main>
       <nav className="bottom-nav" aria-label="Main navigation">
         {tabs.map(([label, href, asset]) => {
-          const selected = href === "/" ? isScan : path === href;
+          const selected =
+            href === "/"
+              ? isScan
+              : path === href || path.startsWith(`${href}/`);
           return (
             <Link
               href={href}
@@ -251,41 +264,11 @@ function ShellContent({
           );
         })}
       </nav>
-      <dialog
-        ref={dialog}
-        className="help-dialog"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) dialog.current?.close();
-        }}
-        aria-labelledby="help-title"
-      >
-        <div className="dialog-heading">
-          <span className="eyebrow">FIELD GUIDE · 01</span>
-          <button
-            onClick={() => dialog.current?.close()}
-            aria-label="Close help"
-            className="close-button"
-          >
-            ×
-          </button>
-        </div>
-        <h2 id="help-title">Settings & scan guide</h2>
-        <p>
-          Tap the <strong>camera area</strong> and allow camera access. Point
-          the rear camera at an EAN or UPC barcode on everyday packaging.
-        </p>
-        <ol>
-          <li>Keep the whole barcode inside the mint guide.</li>
-          <li>Use even lighting, avoid glare, and hold steady.</li>
-          <li>
-            Once a code is found, tap Reveal and peel the upper-right corner.
-          </li>
-        </ol>
-        <p className="help-note">
-          Close the reveal to continue scanning.
-        </p>
-        <p className="local-note">No camera frames are uploaded or stored.</p>
-      </dialog>
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        googleEnabled={googleEnabled}
+      />
     </div>
   );
 }

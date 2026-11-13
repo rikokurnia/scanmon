@@ -1,5 +1,7 @@
 import { isKnownCardId } from "../app/collection/card-catalog";
 import type { ScanResult } from "./scan-result";
+let chainSource: (() => string) | null = null;
+export function setCollectionSource(source: (() => string) | null) { chainSource = source; }
 const KEY = "scanmon:collection:v1",
   EVENT = "scanmon:collection-changed";
 export function readCollection(raw: string): ScanResult[] {
@@ -19,13 +21,16 @@ export function readCollection(raw: string): ScanResult[] {
   }
 }
 export function collectionSnapshot() {
+  if (chainSource) return chainSource();
   try {
     return localStorage.getItem(KEY) ?? "[]";
   } catch {
     return "[]";
   }
 }
+/** Legacy offline preview only. Live ownership comes exclusively from NEAR. */
 export function addRevealedCard(result: ScanResult) {
+  if (chainSource) throw new Error("Mint the discovery on NEAR to own it.");
   const cards = readCollection(collectionSnapshot());
   if (cards.some((c) => c.id === result.id || c.barcode === result.barcode))
     return;

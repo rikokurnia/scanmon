@@ -1,0 +1,12 @@
+.env*
+.git/
+.next/
+node_modules/
+smartcontract/
+scripts/
+docs/
+.gstack/
+.near-credentials/
+*.pem
+*.key
+*.tsbuildinfo

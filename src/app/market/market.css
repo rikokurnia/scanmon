@@ -7,8 +7,11 @@
 }
 
 .app-shell:has(.market-screen) > .app-header {
-  display: none;
+  display: flex;
+  pointer-events: none;
 }
+.app-shell:has(.market-screen) > .app-header .brand {visibility: hidden;}
+.app-shell:has(.market-screen) > .app-header .header-actions {pointer-events: auto;}
 
 .app-shell:has(.market-screen) > .blank-main {
   padding-top: 0;
