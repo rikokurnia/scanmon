@@ -68,11 +68,9 @@ function ShellContent({
   path: string;
 }) {
   const isScan = path === "/" || path === "/scan";
-  const { video, state, code, message, start, accept, resume, result } =
+  const { video, state, code, message, start, resume, result } =
     useScanner(isScan);
   const dialog = useRef<HTMLDialogElement>(null);
-  const [manual, setManual] = useState("");
-  const [inputError, setInputError] = useState("");
   const [revealing, setRevealing] = useState(false);
   const found = state === "found";
   const busy = state === "requesting";
@@ -160,7 +158,7 @@ function ShellContent({
                     {busy
                       ? "Allow camera access to start exploring."
                       : state === "error"
-                        ? "Try again, or enter your code in Settings."
+                        ? "Allow camera access, then tap to try again."
                         : "Point it at a barcode on something nearby."}
                   </span>
                 </div>
@@ -284,46 +282,8 @@ function ShellContent({
           </li>
         </ol>
         <p className="help-note">
-          Can’t read it? You can enter the printed digits below. Close the
-          reveal to continue scanning.
+          Close the reveal to continue scanning.
         </p>
-        {isScan && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (accept(manual)) {
-                dialog.current?.close();
-                setInputError("");
-              } else
-                setInputError(
-                  "Enter a valid 8, 12, or 13-digit EAN/UPC barcode. Check every digit, including the last one.",
-                );
-            }}
-          >
-            <label htmlFor="manual-barcode">Manual barcode entry</label>
-            <input
-              id="manual-barcode"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="e.g. 4006381333931"
-              value={manual}
-              onChange={(e) => setManual(e.target.value)}
-              aria-invalid={!!inputError}
-              aria-describedby={inputError ? "barcode-error" : "barcode-hint"}
-            />
-            <small id="barcode-hint">
-              EAN-8, UPC-A, or EAN-13 · checksum verified
-            </small>
-            {inputError && (
-              <p className="input-error" id="barcode-error" role="alert">
-                {inputError}
-              </p>
-            )}
-            <button className="manual-button" type="submit">
-              Validate barcode <span aria-hidden="true">↗</span>
-            </button>
-          </form>
-        )}
         <p className="local-note">No camera frames are uploaded or stored.</p>
       </dialog>
     </div>

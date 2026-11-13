@@ -63,7 +63,7 @@ export function useScanner(active: boolean) {
     try {
       if (!navigator.mediaDevices?.getUserMedia)
         throw new Error(
-          "Camera access needs HTTPS or localhost. You can enter a barcode in Settings.",
+          "Camera access needs HTTPS or localhost. Open the secure app link and try again.",
         );
       const [
         { BrowserMultiFormatReader },
@@ -100,7 +100,7 @@ export function useScanner(active: boolean) {
             stop();
             setState("error");
             setMessage(
-              "Camera disconnected. Try again or enter a barcode in Settings.",
+              "Camera disconnected. Tap the camera area to try again.",
             );
           }
         },
@@ -149,7 +149,7 @@ export function useScanner(active: boolean) {
             stop();
             setState("error");
             setMessage(
-              "Camera unavailable. Try again or enter a barcode in Settings.",
+              "Camera unavailable. Check camera access and tap to try again.",
             );
           }
         });
@@ -165,14 +165,14 @@ export function useScanner(active: boolean) {
       const name = error instanceof Error ? error.name : "";
       setMessage(
         name === "NotAllowedError"
-          ? "Camera permission is off. Allow camera access in your browser settings, then try again. Or enter the code in Settings."
+          ? "Camera permission is off. Allow camera access in your browser settings, then try again."
           : name === "NotFoundError"
-            ? "No camera found. Use Help to enter your barcode manually."
+            ? "No camera found. Open scanMon on a device with a camera."
             : name === "NotReadableError"
               ? "Camera is busy. Close other apps using it and try again."
               : error instanceof Error
                 ? error.message
-                : "Camera unavailable. Try again or enter a barcode in Settings.",
+                : "Camera unavailable. Check camera access and tap to try again.",
       );
     }
   }
