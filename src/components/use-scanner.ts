@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { IScannerControls } from "@zxing/browser";
 import { expandUPCE, validateBarcode } from "@/lib/barcode";
+import { recordScan } from "@/lib/hunt-progress";
 export type ScanState = "idle" | "requesting" | "scanning" | "found" | "error";
 export function useScanner(active: boolean) {
   const video = useRef<HTMLVideoElement>(null);
@@ -50,6 +51,7 @@ export function useScanner(active: boolean) {
         canvas.getContext("2d")?.drawImage(video.current, 0, 0);
         setSnapshot(canvas.toDataURL("image/jpeg", 0.9));
       }
+      recordScan(valid);
       lastCode.current = valid;
       setCode(valid);
       setState("found");
@@ -70,7 +72,7 @@ export function useScanner(active: boolean) {
     try {
       if (!navigator.mediaDevices?.getUserMedia)
         throw new Error(
-          "Camera access needs HTTPS or localhost. You can enter a barcode in Help.",
+          "Camera access needs HTTPS or localhost. You can enter a barcode in Settings.",
         );
       const [
         { BrowserMultiFormatReader },
@@ -107,7 +109,7 @@ export function useScanner(active: boolean) {
             stop();
             setState("error");
             setMessage(
-              "Camera disconnected. Try again or enter a barcode in Help.",
+              "Camera disconnected. Try again or enter a barcode in Settings.",
             );
           }
         },
@@ -156,7 +158,7 @@ export function useScanner(active: boolean) {
             stop();
             setState("error");
             setMessage(
-              "The camera could not read this frame. Try again or use manual entry in Help.",
+              "The camera could not read this frame. Try again or use manual entry in Settings.",
             );
           }
         },
@@ -174,14 +176,14 @@ export function useScanner(active: boolean) {
       const name = error instanceof Error ? error.name : "";
       setMessage(
         name === "NotAllowedError"
-          ? "Camera permission is off. Allow camera access in your browser settings, then try again. Or enter the code in Help."
+          ? "Camera permission is off. Allow camera access in your browser settings, then try again. Or enter the code in Settings."
           : name === "NotFoundError"
             ? "No camera found. Use Help to enter your barcode manually."
             : name === "NotReadableError"
               ? "Camera is busy. Close other apps using it and try again."
               : error instanceof Error
                 ? error.message
-                : "Camera unavailable. Try again or enter a barcode in Help.",
+                : "Camera unavailable. Try again or enter a barcode in Settings.",
       );
     }
   }
@@ -195,11 +197,9 @@ export function useScanner(active: boolean) {
       return;
     }
     try {
-      await stream.current
-        .getVideoTracks()[0]
-        .applyConstraints({
-          advanced: [{ torch: !torch } as MediaTrackConstraintSet],
-        });
+      await stream.current.getVideoTracks()[0].applyConstraints({
+        advanced: [{ torch: !torch } as MediaTrackConstraintSet],
+      });
       setTorch(!torch);
       setMessage("");
     } catch {

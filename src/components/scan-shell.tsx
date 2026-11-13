@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { useScanner } from "./use-scanner";
+import TomoCompanion from "./tomo-companion";
 const tabs = [
   ["Scan", "/", "scan"],
   ["Collection", "/collection", "collection"],
@@ -24,6 +25,7 @@ function Art({
   const folders: Record<string, string> = {
     flash: "icons/",
     help: "icons/",
+    settings: "icons/",
     scan: "icons/",
     collection: "icons/",
     battle: "icons/",
@@ -61,53 +63,30 @@ function ShellContent({
   path: string;
 }) {
   const isScan = path === "/" || path === "/scan";
-  const {
-    video,
-    state,
-    code,
-    message,
-    snapshot,
-    torch,
-    start,
-    accept,
-    toggleTorch,
-  } = useScanner(isScan);
+  const { video, state, code, message, snapshot, start, accept } =
+    useScanner(isScan);
   const dialog = useRef<HTMLDialogElement>(null);
   const [manual, setManual] = useState("");
   const [inputError, setInputError] = useState("");
   const found = state === "found";
   const busy = state === "requesting";
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isScan ? "is-scan" : ""}`}>
       <header className="app-header">
         <Link href="/" className="brand" aria-label="scanMon home">
           <Art name="logo-scanmon" size={52} />
-          <span className="wordmark">
+          <span className="logo-caption" aria-hidden="true">
             scan<span>Mon</span>
           </span>
         </Link>
         <div className="header-actions">
           <button
-            className={`icon-button ${torch ? "is-on" : ""}`}
-            onClick={toggleTorch}
-            disabled={!isScan}
-            aria-label={torch ? "Turn flash off" : "Flash"}
-            aria-pressed={torch}
-            title="Camera flash"
-          >
-            <Art name="flash" size={34} />
-          </button>
-          <button
-            className="icon-button"
+            className="help-button"
             onClick={() => dialog.current?.showModal()}
-            aria-label="Help"
+            aria-label="Settings"
           >
-            <Art name="help" size={35} />
+            <Art name="settings" size={44} />
           </button>
-        </div>
-        <div className="daily-pill">
-          <span className="daily-dot" />
-          Daily Hunt <span aria-hidden="true">·</span> Find your next favorite
         </div>
       </header>
       <main
@@ -141,17 +120,6 @@ function ShellContent({
                 />
               )}
               <div className="camera-vignette" />
-              <div className="camera-topline">
-                <span className="viewfinder-label">
-                  <span />{" "}
-                  {state === "scanning"
-                    ? "CAMERA LIVE"
-                    : found
-                      ? "SCAN COMPLETE"
-                      : "READY TO EXPLORE"}
-                </span>
-                <span className="camera-format">EAN / UPC</span>
-              </div>
               <div
                 className={`scan-guide ${found ? "locked" : ""}`}
                 aria-hidden="true"
@@ -189,21 +157,27 @@ function ShellContent({
                       ? "Opening your camera…"
                       : state === "error"
                         ? "A little camera trouble"
-                        : "Every barcode holds a little wonder."}
+                        : "Tap to start the camera"}
                   </p>
                   <span>
                     {busy
                       ? "Allow camera access to start exploring."
                       : state === "error"
-                        ? "Try again, or enter your code in Help."
-                        : "Grab something nearby. Let’s see what’s inside."}
+                        ? "Try again, or enter your code in Settings."
+                        : "Point it at a barcode on something nearby."}
                   </span>
                 </div>
               )}
-              {state === "scanning" && (
-                <p className="scanning-tip">
-                  Hold steady. Keep the whole barcode in view.
-                </p>
+              {!found && state !== "scanning" && (
+                <button
+                  className="camera-start"
+                  onClick={start}
+                  disabled={busy}
+                  aria-label={
+                    state === "error" ? "Retry camera" : "Start camera"
+                  }
+                  aria-busy={busy}
+                />
               )}
               {found && (
                 <div className="found-feedback" role="status">
@@ -215,47 +189,28 @@ function ShellContent({
                   </p>
                 </div>
               )}
-              <div className="camera-bottomline">
-                <span>YOUR EVERYDAY. A NEW DISCOVERY.</span>
-                <span aria-hidden="true">＋</span>
-              </div>
             </section>
             <div className="instruction-region">
               <section className="instruction-panel">
-                <Art
-                  name="mystery-card"
-                  className="sticker sticker-mystery"
-                  size={76}
-                />
-                <Art
-                  name="foil-monster-card"
-                  className="sticker sticker-foil"
-                  size={82}
-                />
-                <h1>Scan an everyday item</h1>
-                <p>Different products reveal different monsters</p>
-                <button
-                  className="scan-button"
-                  onClick={start}
-                  disabled={busy}
-                  aria-busy={busy}
-                >
-                  <span className="button-glint" aria-hidden="true" />
-                  {busy
-                    ? "Opening camera…"
-                    : found
-                      ? "Scan another barcode"
-                      : state === "error"
-                        ? "Try camera again"
-                        : state === "scanning"
-                          ? "Restart scan"
-                          : "Scan barcode"}
-                </button>
+                {found && (
+                  <div className="success-action">
+                    <Art
+                      name="mystery-card"
+                      className="sticker sticker-mystery"
+                      size={76}
+                    />
+                    <Art
+                      name="foil-monster-card"
+                      className="sticker sticker-foil"
+                      size={82}
+                    />
+                    <button className="scan-button" onClick={start}>
+                      <span className="button-glint" aria-hidden="true" />
+                      Scan barcode
+                    </button>
+                  </div>
+                )}
               </section>
-              <p className="privacy-note">
-                <span aria-hidden="true">◈</span> Camera stays on your device.
-                Wonder comes to you.
-              </p>
               {message && (
                 <div
                   className="status-message"
@@ -263,13 +218,14 @@ function ShellContent({
                 >
                   {message}{" "}
                   <button onClick={() => dialog.current?.showModal()}>
-                    Open Help
+                    Open settings
                   </button>
                 </div>
               )}
             </div>
           </>
         )}
+        {isScan && <TomoCompanion onScan={start} />}
         {children}
       </main>
       <nav className="bottom-nav" aria-label="Main navigation">
@@ -306,15 +262,17 @@ function ShellContent({
             ×
           </button>
         </div>
-        <h2 id="help-title">A little help on the hunt.</h2>
+        <h2 id="help-title">Settings & scan guide</h2>
         <p>
-          Tap <strong>Scan barcode</strong> and allow camera access. Point the
-          rear camera at an EAN or UPC barcode on everyday packaging.
+          Tap the <strong>camera area</strong> and allow camera access. Point
+          the rear camera at an EAN or UPC barcode on everyday packaging.
         </p>
         <ol>
           <li>Keep the whole barcode inside the mint guide.</li>
           <li>Use even lighting, avoid glare, and hold steady.</li>
-          <li>Tap Flash while scanning if your camera supports it.</li>
+          <li>
+            Once a code is found, the yellow button lets you scan another.
+          </li>
         </ol>
         <p className="help-note">
           Can’t read it? You can enter the printed digits below. This pass ends
