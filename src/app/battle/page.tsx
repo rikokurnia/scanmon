@@ -1,3 +1,4 @@
-export default function Page() {
-  return null;
+import BattleScreen from "./battle-screen";
+export default function BattlePage() {
+  return <BattleScreen view="menu" />;
 }
