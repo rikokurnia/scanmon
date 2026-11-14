@@ -28,6 +28,21 @@ function Sprite({ id, className = "" }: { id: string; className?: string }) {
     </picture>
   );
 }
+function TeamCheck() {
+  return (
+    <span className="battle-check" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M5 12l4.5 4.5L19 7"
+          stroke="currentColor"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
 function Card({ card }: { card: BattleOwnedCard }) {
   const art = CARD_CATALOG[card.cardId];
   return (
@@ -263,7 +278,7 @@ export default function BattleScreen({ view }: { view: View }) {
                 }
               >
                 <Card card={card} />
-                <span className="battle-check">✓</span>
+                <TeamCheck />
               </button>
             ) : draft[i] ? (
               <button
@@ -317,7 +332,7 @@ export default function BattleScreen({ view }: { view: View }) {
                 >
                   <Card card={card} />
                   {draft.includes(card.instanceId) ? (
-                    <span className="battle-check">✓</span>
+                    <TeamCheck />
                   ) : !eligible(card) ? (
                     <span className="battle-lock">Locked</span>
                   ) : null}

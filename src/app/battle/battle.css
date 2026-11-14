@@ -939,3 +939,56 @@
   background: linear-gradient(90deg, #fff, var(--energy), transparent);
   transform-origin: left center;
 }
+
+/* Vector checks have a true visual center, independent of font baselines. */
+.battle-check {
+  z-index: 2;
+  padding: 0;
+  line-height: 1;
+}
+.battle-check svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+/* Selected rooftop cards recede to the left and come forward to the right. */
+.battle-editor .battle-slots {
+  perspective: 750px;
+  perspective-origin: 100% 70%;
+  transform-style: preserve-3d;
+  padding-top: 14px;
+  padding-bottom: 38px;
+}
+.battle-editor .battle-slots > :nth-child(1) {
+  transform: translate3d(-3px, -4px, -50px) rotateY(24deg) rotateZ(-7deg);
+  z-index: 1;
+}
+.battle-editor .battle-slots > :nth-child(2) {
+  transform: translate3d(0, 12px, -12px) rotateY(14deg) rotateZ(-2deg);
+  z-index: 2;
+}
+.battle-editor .battle-slots > :nth-child(3) {
+  transform: translate3d(0, 28px, 35px) rotateY(4deg) rotateZ(4deg);
+  z-index: 3;
+}
+.battle-editor .battle-slots > .battle-selected-card .battle-card-art {
+  box-shadow:
+    -2px 3px 0 var(--navy),
+    -4px 6px 0 #19254685,
+    0 16px 16px #131a3b55;
+}
+.battle-editor .battle-slots > .battle-selected-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(
+    115deg,
+    #ffffff35,
+    transparent 36%,
+    transparent 70%,
+    #19254612
+  );
+  pointer-events: none;
+}
