@@ -55,6 +55,11 @@
   border-color: var(--mint);
   background: #28d6a025;
 }
+.pvp-roster-item > button.selected.is-staked {
+  border-color: #cf3948;
+  background: #ffe0e3;
+  color: #8e1c2b;
+}
 .pvp-roster img {
   width: 100%;
 }

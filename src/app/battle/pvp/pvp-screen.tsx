@@ -509,7 +509,13 @@ function PvpContent() {
             {eligible.map((card) => (
               <div className="pvp-roster-item" key={card.token_id}>
                 <button
-                  className={ids.includes(card.token_id) ? "selected" : ""}
+                  className={
+                    stake === card.token_id
+                      ? "selected is-staked"
+                      : ids.includes(card.token_id)
+                        ? "selected"
+                        : ""
+                  }
                   aria-pressed={ids.includes(card.token_id)}
                   onClick={() => {
                     if (ids.includes(card.token_id)) {
