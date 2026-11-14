@@ -169,7 +169,9 @@ export default function BattleEffects({
   stage,
   actorId,
   cardId,
+  enemyCardId = "boss",
 }: {
+  enemyCardId?: CardId | "boss";
   stage: RefObject<HTMLDivElement | null>;
   actorId: string;
   cardId: CardId;
@@ -216,7 +218,7 @@ export default function BattleEffects({
       <Burst
         from={points.boss}
         to={points.player}
-        cardId="boss"
+        cardId={enemyCardId}
         side="boss"
         delay={0.18}
       />

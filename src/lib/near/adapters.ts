@@ -65,7 +65,8 @@ export function createChainMarketAdapter(): MarketAdapter {
           throw err;
         }
         response = {
-          reply: "Hold on, pal—my counter ledger is catching its breath. Try again!",
+          reply:
+            "Hold on, pal—my counter ledger is catching its breath. Try again!",
           offer: null,
           status: "error" as const,
           offerIntent: "none" as const,
@@ -81,14 +82,20 @@ export function createChainMarketAdapter(): MarketAdapter {
       const quote = await quotePromise;
 
       // General questions / small talk stay conversational with no forced offer.
-      if (response.offerIntent === "none" || (!response.offer && response.offerIntent !== "active")) {
+      if (
+        response.offerIntent === "none" ||
+        (!response.offer && response.offerIntent !== "active")
+      ) {
         return {
           ...response,
           offer: null,
         };
       }
 
-      if (response.offerIntent === "declined" || response.status === "declined") {
+      if (
+        response.offerIntent === "declined" ||
+        response.status === "declined"
+      ) {
         return {
           ...response,
           offer: null,
@@ -174,7 +181,7 @@ export function createChainBattleAdapter(): BattleAdapter {
         ownedCards: (state.player?.cards ?? []).map((c) => ({
           instanceId: c.token_id,
           cardId: c.card_id,
-          raidEligible: true,
+          raidEligible: !state.player?.locked_ids.includes(c.token_id),
         })),
         savedTeamIds: state.team,
         minimumTeamSize: 3,

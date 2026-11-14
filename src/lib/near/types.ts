@@ -45,6 +45,7 @@ export type TxKind =
   | "sell"
   | "loot"
   | "boss"
+  | "pvp"
   | "raid"
   | "storage"
   | "faucet"

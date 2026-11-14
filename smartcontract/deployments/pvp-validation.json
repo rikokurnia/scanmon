@@ -1,0 +1,55 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "api": "https://scannmon.vercel.app",
+  "verifiedAt": "2026-11-14T03:58:17.240Z",
+  "checks": [
+    "two real players escrow owned NFTs",
+    "invalid signatures and foreign actors rejected",
+    "simultaneous actions resolve exactly once",
+    "settlement and repeat claim safe",
+    "90s disconnect cancels and both NFT stakes return"
+  ],
+  "receipts": [
+    {
+      "step": "create_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "F7LvET4Fcrp1JHdrV8NKmEp7nCcHHGKgCEcTEBBgBxEB"
+    },
+    {
+      "step": "join_pvp",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "HFCLHQhELhFWsh8R4mh7LM2sK6fZU2JkdhAqWcmC34aV"
+    },
+    {
+      "step": "claim_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "C3fDXWBFGb7fEzePQBvRX7DjKitLbYJFbQ3DAYsoftXB"
+    },
+    {
+      "step": "claim_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "2vN4sAs2KuuDTrKiFCzTE1WMBWBBaWFZp832nnLzcdus"
+    },
+    {
+      "step": "mint_scan",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "6YfGW9vyEjb53NHi3uvJxRxH8A5JkirE1frFXJJVoeZm"
+    },
+    {
+      "step": "create_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "BLZbSQk35UeeMms7QPnapD3RtNhXpXnHCo3bnLNocwfa"
+    },
+    {
+      "step": "join_pvp",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "2pttHxHJCdigoEg225dm2yyYpoxF67G5s74b5YEgmSnC"
+    },
+    {
+      "step": "claim_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "6DamGdakR1oiYWbco2LD49Sd6LvHDjDcozgZe9TPhYFz"
+    }
+  ]
+}

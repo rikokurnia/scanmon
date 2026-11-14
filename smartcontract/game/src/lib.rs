@@ -1,3 +1,4 @@
+mod pvp;
 use near_sdk::{
     assert_one_yocto,
     collections::{LookupMap, LookupSet},

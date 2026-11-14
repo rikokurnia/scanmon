@@ -1,0 +1,8 @@
+{
+  "network": "testnet",
+  "url": "https://scannmon.vercel.app/battle/pvp",
+  "vercelDeploymentId": "dpl_4QrzN77co5JHrMETkRDEm4N4q7Pd",
+  "neonProjectId": "misty-scene-05254725",
+  "databaseRegion": "aws-ap-southeast-1",
+  "productionApiVerification": "smartcontract/deployments/pvp-validation.json"
+}

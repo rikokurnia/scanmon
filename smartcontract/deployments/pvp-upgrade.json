@@ -1,0 +1,15 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "deployedAt": "2026-11-14T03:42:49.304Z",
+  "receipts": [
+    {
+      "step": "Deploy PvP escrow",
+      "hash": "8WiZZeMBE2ywjFYVNyWBFMZ8f7rXNwE2ff9YAEMRvV2d"
+    },
+    {
+      "step": "Configure PvP result verifier",
+      "hash": "2e4f38faPc8UfzV3FZYhndhrX3AexmL11yTaKRMUi9sD"
+    }
+  ]
+}

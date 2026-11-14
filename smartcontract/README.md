@@ -36,3 +36,9 @@ Mutating transfers attach 1 yoctoNEAR. New discovery, quest, raid, listing, and 
 The mock currency is not Circle USDC. Existing deployed contracts cannot be switched to another FT by a frontend variable. Deploy a new game configuration and fund the matching token's treasuries if changing currency.
 
 The single-claim upgrade is reproducible with `node scripts/upgrade-boss-reward.mjs --deploy --verify` after contract tests/build. It changes only the existing testnet game code, verifies configuration preservation, and uses the configured QA Alice account for a real claim/retry check. Signing material remains in ignored environment files.
+
+## PvP escrow
+
+`create_pvp` / `join_pvp` authorize a room-scoped action key, reserve refund capacity and escrow one NFT each while locking both three-card teams. Player usernames are unique on-chain labels bound to wallet ownership. The server resolves signed simultaneous turns in Neon Postgres; `claim_pvp` verifies the configured referee's domain-bound Ed25519 result proof and transfers existing NFTs. Disconnect over 90 seconds uses a refund proof; host cancellation before joining and permissionless 24-hour expiry provide recovery. Settlement/retries cannot transfer twice. See `src/app/battle/pvp/INTEGRATION.md` for operational details and trust assumptions.
+
+PvP lives in separately prefixed maps without changing Game's existing Borsh state. Do not roll back to pre-PvP WASM while stakes remain active: preserve the recovery methods in every upgrade. `scripts/deploy-pvp.mjs` builds on the existing dedicated testnet deployment; `scripts/test-pvp.ts` exercises two real QA wallets and the HTTP/Neon backend. Public receipts live in `pvp-upgrade.json` and `pvp-validation.json`.

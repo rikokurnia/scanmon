@@ -27,3 +27,5 @@ The two summon GIFs, eight character attacks, boss attack and universal hit from
 - Deployed only the game WASM on testnet, preserving configuration. Real QA claim minted one boss NFT; retry returned the same token and collection count stayed unchanged. Public receipts: `smartcontract/deployments/boss-reward-upgrade.json`. No production/mainnet deployment was made.
 
 Burst polish verified with a temporary QA route (removed): Pikachu, Gengar and Veemon artwork/palettes, three player plus three boss shots, six contact effects, immediate cleanup on switch, 390×844 and 360×640 layouts, no horizontal overflow, Attack reachable at 360×640, no browser console errors. Motion reference: https://motion.dev/docs/react-transitions.
+
+PvP was subsequently authorized and implemented as a separate 3-vs-3 staked-NFT mode. Find Match and the former unavailable Quick Match route now open `/battle/pvp`. See [PvP integration](./pvp/INTEGRATION.md) for room synchronization, usernames, escrow, disconnect/refund and server referee proof details. Daily Boss still uses its independent one-claim flow.

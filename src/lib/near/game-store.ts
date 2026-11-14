@@ -618,7 +618,11 @@ function assertRaidTeam(ids: string[]) {
   if (
     ids.length !== 3 ||
     new Set(ids).size !== 3 ||
-    ids.some((id) => !state.player!.cards.some((card) => card.token_id === id))
+    ids.some(
+      (id) =>
+        !state.player!.cards.some((card) => card.token_id === id) ||
+        state.player!.locked_ids.includes(id),
+    )
   )
     throw new Error("Choose three available owned cards.");
 }

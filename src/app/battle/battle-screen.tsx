@@ -201,8 +201,8 @@ export default function BattleScreen({ view }: { view: View }) {
           />
           <Link
             className="battle-yellow"
-            href="/battle/quick-match"
-            aria-description="Matchmaking unavailable"
+            href="/battle/pvp"
+            aria-description="Player battle, three versus three with an NFT stake"
           >
             <span className="battle-button-label">Find Match</span>
           </Link>

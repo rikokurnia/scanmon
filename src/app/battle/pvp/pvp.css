@@ -1,0 +1,299 @@
+.pvp-screen {
+  padding: 12px 16px 24px;
+  min-width: 0;
+}
+.pvp-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.pvp-heading h1 {
+  font-size: 27px;
+  margin: 0;
+}
+.pvp-heading p {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 800;
+}
+.pvp-screen input {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--navy);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 10px 12px;
+  color: var(--navy);
+  margin: 8px 0;
+}
+.pvp-screen label {
+  font-weight: 900;
+}
+.pvp-screen p,
+.pvp-screen small {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.pvp-roster {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.pvp-roster-item {
+  position: relative;
+}
+.pvp-roster-item > button:first-child {
+  width: 100%;
+  padding: 4px;
+  border: 2px solid transparent;
+  background: transparent;
+  border-radius: 12px;
+  min-height: 44px;
+}
+.pvp-roster-item > button.selected {
+  border-color: var(--mint);
+  background: #28d6a025;
+}
+.pvp-roster img {
+  width: 100%;
+}
+.pvp-roster span {
+  font-size: 12px;
+  font-weight: 900;
+}
+.pvp-remove {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  border: 2px solid var(--navy);
+  border-radius: 50%;
+  font-size: 22px;
+}
+.pvp-warning,
+.pvp-error {
+  padding: 12px;
+  background: #ffe5a3;
+  border: 2px solid var(--navy);
+  border-radius: 12px;
+}
+.pvp-error {
+  background: #ffdddd;
+}
+.pvp-secondary {
+  min-height: 44px;
+  border: 2px solid var(--navy);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 8px 12px;
+  font-weight: 900;
+  color: var(--navy);
+}
+.pvp-open-room {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #19254633;
+}
+.pvp-open-room small {
+  display: block;
+}
+.pvp-lobby h2 {
+  margin-top: 24px;
+}
+.pvp-escrow-card {
+  position: relative;
+  width: 150px;
+  margin: 20px auto;
+}
+.pvp-escrow-card > img {
+  width: 100%;
+  filter: brightness(0.55);
+}
+.pvp-stake-lock {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  left: 40px;
+  top: 60px;
+  color: var(--paper);
+  filter: drop-shadow(0 3px 3px #192546);
+}
+.pvp-stake-lock svg {
+  width: 100%;
+  height: 100%;
+}
+.pvp-room {
+  text-align: center;
+}
+.pvp-room .pvp-heading {
+  text-align: left;
+}
+.pvp-room > .battle-yellow {
+  margin: auto;
+}
+.pvp-result button {
+  margin: 12px auto;
+}
+.app-shell:has(.pvp-arena) > .app-header,
+.app-shell:has(.pvp-arena) > .bottom-nav {
+  display: none;
+}
+.app-shell:has(.pvp-arena) > .blank-main {
+  padding-top: 0;
+}
+.pvp-arena {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(#19254620, #19254655),
+    url("/assets/battle/rooftop-arena.png") center/100% 100%;
+  color: var(--paper);
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.pvp-arena .pvp-heading,
+.pvp-round {
+  background: #192546df;
+  border-radius: 16px;
+  padding: 8px;
+}
+.pvp-round {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+.pvp-opponent-cards,
+.pvp-player-cards {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.pvp-opponent-cards button,
+.pvp-player-cards button {
+  position: relative;
+  width: 26%;
+  max-width: 85px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #192546dd;
+  color: var(--paper);
+  padding: 2px;
+}
+.pvp-opponent-cards img,
+.pvp-player-cards img {
+  width: 100%;
+}
+.pvp-opponent-cards span,
+.pvp-player-cards span {
+  font-size: 11px;
+  font-weight: 900;
+}
+.pvp-opponent-cards button[aria-pressed="true"],
+.pvp-player-cards button[aria-pressed="true"] {
+  border-color: var(--mint);
+  box-shadow: 0 0 8px var(--mint);
+}
+.pvp-stage {
+  flex: 1;
+  min-height: 190px;
+  overflow: clip;
+}
+.pvp-opponent-sprite {
+  right: -8%;
+  top: -10%;
+  height: 85%;
+  width: 60%;
+  transform: scaleX(-1);
+}
+.pvp-player-sprite {
+  position: absolute;
+  left: -5%;
+  bottom: -15%;
+  width: 60%;
+  height: 95%;
+}
+.pvp-player-sprite picture,
+.pvp-player-sprite img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pvp-arena > small {
+  margin-top: 8px;
+  text-align: center;
+}
+.pvp-arena .battle-yellow {
+  color: var(--navy);
+  flex: none;
+}
+.app-shell:has(.pvp-screen) .nav-tab[href="/battle"] {
+  background: #80daf4;
+}
+.pvp-reward-unlock {
+  position: relative;
+  width: 150px;
+  margin: auto;
+}
+.pvp-reward-unlock > img {
+  width: 100%;
+  filter: brightness(0.5);
+}
+.pvp-unlock-symbol {
+  position: absolute;
+  left: 40px;
+  top: 60px;
+  width: 70px;
+  height: 70px;
+  color: #fff;
+}
+.pvp-unlock-symbol svg {
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pvp-stake-lock .pvp-shackle {
+    animation: pvp-lock-close 0.6s ease-out both;
+    transform-origin: 24px 22px;
+  }
+  .pvp-unlock-symbol {
+    animation: pvp-unlock 0.85s ease-out both;
+  }
+  @keyframes pvp-lock-close {
+    from {
+      transform: translateY(-10px) rotate(-25deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes pvp-unlock {
+    to {
+      transform: translateY(-35px) rotate(-22deg);
+      opacity: 0;
+    }
+  }
+}
+@media (max-height: 700px) {
+  .pvp-opponent-cards button {
+    max-width: 58px;
+  }
+  .pvp-player-cards button {
+    max-width: 65px;
+  }
+  .pvp-stage {
+    min-height: 160px;
+  }
+}
+.pvp-heading .battle-back {
+  color: var(--navy);
+}
