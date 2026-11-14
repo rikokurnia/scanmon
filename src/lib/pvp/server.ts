@@ -1,13 +1,15 @@
 import "server-only";
 import { Pool } from "pg";
 import { attachDatabasePool } from "@vercel/functions";
-import { createPublicKey, verify } from "node:crypto";
+import { createPublicKey, verify, randomBytes } from "node:crypto";
 import { KeyPair } from "near-api-js";
 import { GAME_ID } from "@/lib/near/config";
 import { view } from "@/lib/near/rpc";
 import {
   createPvp,
-  resolvePvpRound,
+  advancePvp,
+  PVP_DURATION_MS,
+  type PvpHit,
   type PvpAction,
   type PvpState,
 } from "./engine";
@@ -40,9 +42,13 @@ interface Data {
   lastSeen: [number, number];
   cancelled: boolean;
   started: boolean;
+  ready?: [boolean, boolean];
+  battleStartedAt?: number;
+  gameSeed?: string;
+  hits?: PvpHit[];
 }
 export async function handleRoom(input: Envelope): Promise<RoomView> {
-  const now = Date.now();
+  let now = Date.now();
   if (
     !input ||
     typeof input.roomId !== "string" ||
@@ -100,14 +106,30 @@ export async function handleRoom(input: Envelope): Promise<RoomView> {
       [room.id],
     );
     const data = row.rows[0].data;
+    now = Date.now();
+    data.ready ??= [false, false];
     if (room.phase === "active" && !data.started) {
+      data.gameSeed = randomBytes(16).toString("hex");
       data.battle = createPvp(
         [room.host, room.guest!].map((p) =>
           p.team_ids.map((tokenId, i) => ({ tokenId, cardId: p.card_ids[i] })),
         ) as Parameters<typeof createPvp>[0],
+        data.gameSeed,
       );
       data.lastSeen = [now, now];
       data.started = true;
+    }
+    // Never reinterpret already-escrowed legacy choosing rounds with new combat rules.
+    if (
+      data.battle &&
+      data.battle.version !== 2 &&
+      data.battle.phase === "choosing"
+    )
+      data.cancelled = true;
+    if (data.battleStartedAt && data.battle?.version === 2 && !data.cancelled) {
+      const next = advancePvp(data.battle, now - data.battleStartedAt);
+      data.battle = next.state;
+      if (next.hits.length) data.hits = next.hits;
     }
     if (
       data.started &&
@@ -126,33 +148,15 @@ export async function handleRoom(input: Envelope): Promise<RoomView> {
         data.battle.phase !== "choosing"
       )
         throw new Error("Match is no longer accepting actions.");
-      const a = input.action;
       if (
-        a.round !== data.battle.round ||
-        a.skill !== "strike" ||
-        !data.battle.teams[side].some(
-          (c) => c.tokenId === a.actor && c.hp > 0,
-        ) ||
-        !data.battle.teams[1 - side].some(
-          (c) => c.tokenId === a.target && c.hp > 0,
-        )
+        input.action.skill !== "auto" ||
+        input.action.actor !== "" ||
+        input.action.target !== ""
       )
-        throw new Error(
-          "Choose an available character and target for this round.",
-        );
-      if (
-        data.pending[side] &&
-        JSON.stringify(data.pending[side]) !== JSON.stringify(a)
-      )
-        throw new Error("Your action is already locked for this round.");
-      data.pending[side] = a;
-      if (data.pending[0] && data.pending[1]) {
-        data.battle = resolvePvpRound(data.battle, [
-          data.pending[0],
-          data.pending[1],
-        ]).state;
-        data.pending = [null, null];
-      }
+        throw new Error("Choose Attack to start the full team.");
+      data.ready[side] = true;
+      if (data.ready.every(Boolean) && !data.battleStartedAt)
+        data.battleStartedAt = now;
     }
     await client.query(
       "UPDATE scanmon_pvp_rooms SET data=$2,updated_at=now() WHERE id=$1",
@@ -186,7 +190,13 @@ export async function handleRoom(input: Envelope): Promise<RoomView> {
     result = {
       room,
       battle: data.battle,
-      submitted: data.pending.map(Boolean),
+      submitted: data.ready,
+      serverNow: now,
+      battleStartedAt: data.battleStartedAt ?? null,
+      deadlineAt: data.battleStartedAt
+        ? data.battleStartedAt + PVP_DURATION_MS
+        : null,
+      hits: data.hits ?? [],
       cancelled: data.cancelled,
       certificate,
       lastSeen: data.lastSeen,

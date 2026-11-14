@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Match unavailable. Try again.";
     const safe =
-      /Session expired|Match not found|Not your match|Invalid player|no longer accepting|Choose an available|already locked/.test(
+      /Session expired|Match not found|Not your match|Invalid player|no longer accepting|Choose an available|Choose Attack|already locked/.test(
         message,
       );
     return NextResponse.json(

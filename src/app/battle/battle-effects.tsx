@@ -30,19 +30,27 @@ interface Anchors {
   boss: Point;
 }
 
-function Burst({
+export function Burst({
   from,
   to,
   cardId,
   delay = 0,
   side,
+  count = 3,
+  speedFactor = 1,
+  artRotation = 0,
 }: {
+  count?: number;
+  speedFactor?: number;
+  artRotation?: number;
   from: Point;
   to: Point;
   cardId: CardId | "boss";
   delay?: number;
   side: "player" | "boss";
 }) {
+  const period = BURST_PERIOD * speedFactor,
+    travel = SHOT_TRAVEL * speedFactor;
   const [energy, accent] = THEMES[cardId];
   const heading = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
   const color = {
@@ -66,9 +74,9 @@ function Burst({
           transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
         />
       </div>
-      {[0, 1, 2].map((index) => {
+      {Array.from({ length: count }, (_, index) => index).map((index) => {
         const wait = delay + index * SHOT_SPACING;
-        const spread = (index - 1) * 8;
+        const spread = count === 1 ? 0 : (index - 1) * 8;
         return (
           <div
             key={index}
@@ -87,16 +95,16 @@ function Burst({
                 opacity: [0, 1, 1, 0],
               }}
               transition={{
-                duration: SHOT_TRAVEL,
+                duration: travel,
                 delay: wait,
                 repeat: Infinity,
-                repeatDelay: BURST_PERIOD - SHOT_TRAVEL,
+                repeatDelay: period - travel,
                 ease: "easeIn",
                 opacity: {
-                  duration: SHOT_TRAVEL,
+                  duration: travel,
                   delay: wait,
                   repeat: Infinity,
-                  repeatDelay: BURST_PERIOD - SHOT_TRAVEL,
+                  repeatDelay: period - travel,
                   times: [0, 0.08, 0.86, 1],
                 },
               }}
@@ -114,7 +122,13 @@ function Burst({
                 className="battle-burst-art"
                 src={attackArt(cardId)}
                 alt=""
-                animate={{ rotate: [-9, 8, -9], scale: [0.92, 1.09, 0.92] }}
+                animate={{
+                  rotate:
+                    artRotation === 180
+                      ? [180, 180, 180]
+                      : [artRotation - 9, artRotation + 8, artRotation - 9],
+                  scale: [0.92, 1.09, 0.92],
+                }}
                 transition={{
                   duration: 0.28,
                   repeat: Infinity,
@@ -138,9 +152,9 @@ function Burst({
               }}
               transition={{
                 duration: 0.27,
-                delay: wait + SHOT_TRAVEL,
+                delay: wait + travel,
                 repeat: Infinity,
-                repeatDelay: BURST_PERIOD - 0.27,
+                repeatDelay: period - 0.27,
                 times: [0, 0.12, 0.45, 1],
                 ease: "easeOut",
               }}

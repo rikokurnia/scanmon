@@ -2,11 +2,17 @@
   "network": "testnet",
   "contractId": "scanmon-6f49a2b600.testnet",
   "api": "https://scannmon.vercel.app",
-  "verifiedAt": "2026-11-14T03:58:17.240Z",
+  "verifiedAt": "2026-11-14T10:19:00.243Z",
+  "combat": {
+    "roomId": "pvp:63",
+    "outcome": "scanmon-alice-mwevvjyp.testnet",
+    "rounds": 11
+  },
   "checks": [
     "two real players escrow owned NFTs",
     "invalid signatures and foreign actors rejected",
-    "simultaneous actions resolve exactly once",
+    "both teams auto-attack using HP and decimal ATK; repeated Attack does not reset the deadline",
+    "90s battle deadline produces signed refund and both escrow cards return (QA no-damage fixture)",
     "settlement and repeat claim safe",
     "90s disconnect cancels and both NFT stakes return"
   ],
@@ -14,42 +20,57 @@
     {
       "step": "create_pvp",
       "account": "scanmon-alice-mwevvjyp.testnet",
-      "hash": "F7LvET4Fcrp1JHdrV8NKmEp7nCcHHGKgCEcTEBBgBxEB"
+      "hash": "CZ5NFWiotXYDMiJGyEwZk88JZPgjBquwvF86iXnsp3Cn"
     },
     {
       "step": "join_pvp",
       "account": "scanmon-bob-mwevvmal.testnet",
-      "hash": "HFCLHQhELhFWsh8R4mh7LM2sK6fZU2JkdhAqWcmC34aV"
+      "hash": "AMsRz8DsnhjMXQac6scp1G91WXvHXdnjrt2AvgM1hwar"
     },
     {
       "step": "claim_pvp",
       "account": "scanmon-alice-mwevvjyp.testnet",
-      "hash": "C3fDXWBFGb7fEzePQBvRX7DjKitLbYJFbQ3DAYsoftXB"
+      "hash": "8LfvETqdtoBVqEBhn3mTPZ4LYFRzrNu76SaH1p3r2Kpn"
     },
     {
       "step": "claim_pvp",
       "account": "scanmon-alice-mwevvjyp.testnet",
-      "hash": "2vN4sAs2KuuDTrKiFCzTE1WMBWBBaWFZp832nnLzcdus"
+      "hash": "FqNQq6sYDaHHe9CTZ99gKBLvddBTZ5gFNhSM6B83jycq"
     },
     {
       "step": "mint_scan",
       "account": "scanmon-bob-mwevvmal.testnet",
-      "hash": "6YfGW9vyEjb53NHi3uvJxRxH8A5JkirE1frFXJJVoeZm"
+      "hash": "8s4TaaGmQERzkic5ZJWBgz5GrezEgdb5U1k9EqW9ugtc"
     },
     {
       "step": "create_pvp",
       "account": "scanmon-alice-mwevvjyp.testnet",
-      "hash": "BLZbSQk35UeeMms7QPnapD3RtNhXpXnHCo3bnLNocwfa"
+      "hash": "CNX2UCXbeCcKrtzHAG2rLUkavXWTCJsTMMZyxfTvxPWR"
     },
     {
       "step": "join_pvp",
       "account": "scanmon-bob-mwevvmal.testnet",
-      "hash": "2pttHxHJCdigoEg225dm2yyYpoxF67G5s74b5YEgmSnC"
+      "hash": "6Ka2sKgSFjS7EpUJAhLi2Gg5bfdykvngH1GozEWtfrwc"
     },
     {
       "step": "claim_pvp",
       "account": "scanmon-alice-mwevvjyp.testnet",
-      "hash": "6DamGdakR1oiYWbco2LD49Sd6LvHDjDcozgZe9TPhYFz"
+      "hash": "J6bSBvM8V9ED54FVW9z7CPDYKDZZEGnnv95xyRsVWX5H"
+    },
+    {
+      "step": "create_pvp",
+      "account": "scanmon-alice-mwevvjyp.testnet",
+      "hash": "5csMqAcxhXruzAZgbhwZwP29BYZuiD5VrP7oeQM51pwv"
+    },
+    {
+      "step": "join_pvp",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "DTEbJWPyUodLympZqT8eZmdtwCGKuuKyGzLwWLGm741C"
+    },
+    {
+      "step": "claim_pvp",
+      "account": "scanmon-bob-mwevvmal.testnet",
+      "hash": "7LRYP9jxJR1cbQmgGbApKRvYhBmifyZwKGxMGSgUxz6f"
     }
   ]
 }

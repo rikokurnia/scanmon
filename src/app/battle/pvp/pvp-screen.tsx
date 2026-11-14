@@ -10,7 +10,8 @@ import { pollPvp } from "@/lib/pvp/client";
 import { enterPvp, settlePvp, cancelPvp } from "@/lib/pvp/transactions";
 import type { PvpRoom, RoomView } from "@/lib/pvp/protocol";
 import BossRewardReveal from "../boss-reward-reveal";
-import BattleEffects from "../battle-effects";
+import PvpEffects from "./pvp-effects";
+import { PVP_STATS } from "@/lib/pvp/engine";
 import "../battle.css";
 import "./pvp.css";
 function Lock() {
@@ -39,25 +40,31 @@ function Art({ id }: { id: CardId }) {
   );
 }
 function Sprite({ id, enemy = false }: { id: CardId; enemy?: boolean }) {
-  const name = id === "almarts27-hamster-boss" ? "boss" : id;
+  const src = enemy
+    ? id === "doge"
+      ? "/assets/pvp/doge-front.gif"
+      : id === "almarts27-hamster-boss"
+        ? "/assets/battle/boss.gif"
+        : "/assets/front-idle/" + id + ".gif"
+    : "/assets/battle/" +
+      (id === "almarts27-hamster-boss" ? "boss" : id) +
+      ".gif";
+  const still = enemy
+    ? id === "doge"
+      ? "/assets/pvp/doge-front.png"
+      : id === "almarts27-hamster-boss"
+        ? "/assets/battle/boss-still.png"
+        : src.replace(".gif", ".png")
+    : src.replace(".gif", "-still.png");
   return (
-    <picture
-      className={
-        enemy
-          ? "battle-sprite battle-boss pvp-opponent-sprite"
-          : "battle-sprite"
-      }
-    >
-      <source
-        media="(prefers-reduced-motion: reduce)"
-        srcSet={"/assets/battle/" + name + "-still.png"}
-      />
-      <img
-        src={"/assets/battle/" + name + ".gif"}
-        alt={CARD_CATALOG[id].name}
-      />
+    <picture className="pvp-character-art">
+      <source media="(prefers-reduced-motion: reduce)" srcSet={still} />
+      <img src={src} alt={CARD_CATALOG[id].name} />
     </picture>
   );
+}
+function hpText(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 function PvpContent() {
   const game = useGame();
@@ -74,12 +81,9 @@ function PvpContent() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [active, setActive] = useState("");
-  const [target, setTarget] = useState("");
+  const [remaining, setRemaining] = useState(90);
+  const clockSync = useRef({ server: 0, local: 0 });
   const [reveal, setReveal] = useState(false);
-  const [effects, setEffects] = useState(false);
-  const round = useRef(1);
-  const effectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const actionLock = useRef(false);
   useEffect(() => {
@@ -133,13 +137,8 @@ function PvpContent() {
         if (cancelled) return;
         setMatch(result);
         setClock(Date.now());
+        clockSync.current = { server: result.serverNow, local: Date.now() };
         setError("");
-        if (result.battle && result.battle.round > round.current) {
-          round.current = result.battle.round;
-          setEffects(true);
-          if (effectTimer.current) clearTimeout(effectTimer.current);
-          effectTimer.current = setTimeout(() => setEffects(false), 1250);
-        }
       } catch (e) {
         if (!cancelled)
           setError(
@@ -155,9 +154,26 @@ function PvpContent() {
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      if (effectTimer.current) clearTimeout(effectTimer.current);
     };
   }, [roomId, account]);
+  useEffect(() => {
+    const update = () => {
+      const deadline = match?.deadlineAt;
+      if (!deadline) {
+        setRemaining(90);
+        return;
+      }
+      const now =
+        clockSync.current.server + (Date.now() - clockSync.current.local);
+      setRemaining(Math.max(0, Math.ceil((deadline - now) / 1000)));
+    };
+    const timer = setInterval(update, 200);
+    const initial = setTimeout(update, 0);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(initial);
+    };
+  }, [match?.deadlineAt]);
   async function perform(fn: () => Promise<void>) {
     if (actionLock.current) return;
     actionLock.current = true;
@@ -195,7 +211,6 @@ function PvpContent() {
           "Escrow confirmed. Refresh matches to reopen your room.",
         );
       localStorage.setItem("scanmon:pvp-room:" + account, found);
-      round.current = 1;
       setRoomId(found);
     });
   }
@@ -205,12 +220,6 @@ function PvpContent() {
   const me = players[side];
   const enemy = players[1 - side];
   const battle = match?.battle;
-  const actor =
-    battle?.teams[side].find((c) => c.tokenId === active && c.hp > 0) ??
-    battle?.teams[side].find((c) => c.hp > 0);
-  const victim =
-    battle?.teams[1 - side].find((c) => c.tokenId === target && c.hp > 0) ??
-    battle?.teams[1 - side].find((c) => c.hp > 0);
   const terminal =
     !!match?.certificate ||
     room?.phase === "settled" ||
@@ -249,7 +258,9 @@ function PvpContent() {
             <h1>
               {terminal
                 ? refund
-                  ? "Match cancelled"
+                  ? match.deadlineAt && match.serverNow >= match.deadlineAt
+                    ? "Time's up"
+                    : "Match cancelled"
                   : won
                     ? "Victory!"
                     : "Good battle"
@@ -299,104 +310,131 @@ function PvpContent() {
         )}
         {battle && enemy && !terminal && (
           <>
-            <div className="pvp-round">
-              Round {battle.round} ·{" "}
-              {match.submitted[side]
-                ? "Action locked · waiting for opponent"
-                : "Choose character and target"}
+            <div className="pvp-combat-hud">
+              <div
+                className={
+                  "pvp-countdown " + (remaining <= 15 ? "is-urgent" : "")
+                }
+                role="timer"
+                aria-label="Time remaining"
+              >
+                <span aria-hidden="true">◷</span>
+                {String(Math.floor(remaining / 60)).padStart(2, "0")}:
+                {String(remaining % 60).padStart(2, "0")}
+              </div>
+              <span>
+                {match.battleStartedAt
+                  ? "Auto battle"
+                  : match.submitted[side]
+                    ? "Waiting for opponent to start"
+                    : "Ready to battle"}
+              </span>
             </div>
-            <div className="pvp-opponent-cards">
-              {battle.teams[1 - side].map((card) => (
-                <button
-                  key={card.tokenId}
-                  aria-label={
-                    "Target " +
-                    CARD_CATALOG[card.cardId].name +
-                    ", " +
-                    card.hp +
-                    " HP"
-                  }
-                  aria-pressed={victim?.tokenId === card.tokenId}
-                  disabled={card.hp === 0 || match.submitted[side]}
-                  onClick={() => setTarget(card.tokenId)}
-                >
-                  <Art id={card.cardId} />
-                  <span>
-                    {card.hp} / {card.maxHp}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="battle-stage pvp-stage" ref={stage}>
-              {victim && <Sprite id={victim.cardId} enemy />}
-              {actor && (
-                <div
-                  data-fighter-id={actor.tokenId}
-                  className="pvp-player-sprite"
-                >
-                  <Sprite id={actor.cardId} />
-                </div>
+            <div className="pvp-combat-stage" ref={stage}>
+              {([1 - side, side] as const).flatMap((teamSide) =>
+                battle.teams[teamSide].map((card, index) => {
+                  const enemySide = teamSide !== side;
+                  return (
+                    <div
+                      key={card.tokenId}
+                      data-pvp-fighter={card.tokenId}
+                      className={
+                        "pvp-fighter " +
+                        (enemySide ? "is-enemy" : "is-player") +
+                        " fighter-" +
+                        index +
+                        (card.hp === 0 ? " is-defeated" : "")
+                      }
+                    >
+                      <div className="pvp-health">
+                        <progress
+                          aria-label={
+                            CARD_CATALOG[card.cardId].name +
+                            " " +
+                            (enemySide ? "opponent" : "your") +
+                            " HP"
+                          }
+                          max={card.maxHp}
+                          value={card.hp}
+                        />
+                        <span>
+                          {hpText(card.hp)}/{card.maxHp}
+                        </span>
+                      </div>
+                      <div className="pvp-fighter-image">
+                        <Sprite id={card.cardId} enemy={enemySide} />
+                        <i className="pvp-body-anchor" />
+                      </div>
+                      {card.hp === 0 && <span className="pvp-ko">KO</span>}
+                    </div>
+                  );
+                }),
               )}
-              {effects && actor && victim && (
-                <BattleEffects
-                  key={battle.round}
-                  stage={stage}
-                  actorId={actor.tokenId}
-                  cardId={actor.cardId}
-                  enemyCardId={victim.cardId}
-                />
-              )}
+              {match.battleStartedAt &&
+                battle.phase === "choosing" &&
+                match.hits?.length > 0 && (
+                  <PvpEffects
+                    stage={stage}
+                    hits={match.hits.filter((hit) =>
+                      battle.teams[hit.side].some(
+                        (c) => c.tokenId === hit.actor && c.hp > 0,
+                      ),
+                    )}
+                    side={side as 0 | 1}
+                  />
+                )}
             </div>
-            <div className="pvp-player-cards">
+            <div className="pvp-own-team" aria-label="Your team cards">
               {battle.teams[side].map((card) => (
-                <button
-                  key={card.tokenId}
-                  aria-label={
-                    "Select " +
-                    CARD_CATALOG[card.cardId].name +
-                    ", " +
-                    card.hp +
-                    " HP"
+                <div
+                  className={
+                    "pvp-team-card " + (card.hp === 0 ? "is-defeated" : "")
                   }
-                  aria-pressed={actor?.tokenId === card.tokenId}
-                  disabled={card.hp === 0 || match.submitted[side]}
-                  onClick={() => setActive(card.tokenId)}
+                  key={card.tokenId}
                 >
                   <Art id={card.cardId} />
                   <span>
-                    {card.hp} / {card.maxHp}
+                    {hpText(card.hp)} HP · ATK{" "}
+                    {card.atk?.toFixed(1) ??
+                      (PVP_STATS[card.cardId].atk / 10).toFixed(1)}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
             <button
-              className="battle-yellow"
+              className="battle-yellow pvp-start-attack"
               disabled={
                 busy ||
                 match.submitted[side] ||
-                !actor ||
-                !victim ||
-                battle.phase !== "choosing"
+                battle.phase !== "choosing" ||
+                remaining === 0
               }
               onClick={() =>
                 void perform(async () => {
-                  if (actor && victim)
-                    setMatch(
-                      await pollPvp(room.id, account!, {
-                        round: battle.round,
-                        actor: actor.tokenId,
-                        target: victim.tokenId,
-                        skill: "strike",
-                      }),
-                    );
+                  const result = await pollPvp(room.id, account!, {
+                    round: 1,
+                    actor: "",
+                    target: "",
+                    skill: "auto",
+                  });
+                  clockSync.current = {
+                    server: result.serverNow,
+                    local: Date.now(),
+                  };
+                  setMatch(result);
                 })
               }
             >
-              {match.submitted[side] ? "Waiting for opponent…" : "Attack"}
+              {match.battleStartedAt
+                ? "Team attacking…"
+                : match.submitted[side]
+                  ? "Waiting for opponent…"
+                  : "Attack"}
             </button>
             <small>
-              Reconnect within 90 seconds. A timeout cancels the match and
-              returns both stakes.
+              {match.battleStartedAt
+                ? "Your whole team attacks automatically. No winner at 00:00 returns both cards."
+                : "Press Attack once. The 90-second timer starts when both teams are ready."}
             </small>
           </>
         )}

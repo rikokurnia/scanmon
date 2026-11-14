@@ -1,5 +1,5 @@
 import type { CardId } from "@/app/collection/card-catalog";
-import type { PvpAction, PvpState } from "./engine";
+import type { PvpAction, PvpState, PvpHit } from "./engine";
 export interface PvpPlayer {
   account_id: string;
   username: string;
@@ -28,6 +28,10 @@ export interface RoomView {
   cancelled: boolean;
   certificate: Certificate | null;
   lastSeen: number[];
+  serverNow: number;
+  battleStartedAt: number | null;
+  deadlineAt: number | null;
+  hits: PvpHit[];
 }
 export interface Envelope {
   roomId: string;

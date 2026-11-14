@@ -149,11 +149,20 @@ async function request(
         Buffer.from(sessionMessage(game, input)),
         sessions[side].privateKey,
       ).toString("base64");
-  const response = await fetch(api + "/api/pvp/room", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...input, signature }),
-  });
+  const response = await (async () => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await fetch(api + "/api/pvp/room", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...input, signature }),
+        });
+      } catch (error) {
+        if (attempt >= 2) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  })();
   const body = await response.json();
   return { response, body: body as RoomView };
 }
@@ -208,20 +217,29 @@ async function main() {
     skill: "strike",
   };
   assert.equal((await request(room, 0, forged)).response.status, 400);
+  const started = await Promise.all([
+    poll(room, 0, { round: 1, actor: "", target: "", skill: "auto" }),
+    poll(room, 1, { round: 1, actor: "", target: "", skill: "auto" }),
+  ]);
+  const startedAt = started.find((s) => s.battleStartedAt)?.battleStartedAt;
+  assert.ok(startedAt);
+  const retriedStart = await poll(room, 0, {
+    round: 1,
+    actor: "",
+    target: "",
+    skill: "auto",
+  });
+  assert.equal(retriedStart.battleStartedAt, startedAt);
+  assert.equal(retriedStart.deadlineAt! - startedAt, 90000);
+  const battleTimeout = Date.now() + 100000;
   while (state.battle?.phase === "choosing") {
-    const battle = state.battle;
-    const actions = ([0, 1] as const).map((side) => ({
-      round: battle.round,
-      actor: battle.teams[side].find((c) => c.hp > 0)!.tokenId,
-      target: (side === 1
-        ? (battle.teams[0].find((c) => c.hp > 0 && c.cardId !== "pikachu") ??
-          battle.teams[0].find((c) => c.hp > 0))
-        : battle.teams[1].find((c) => c.hp > 0))!.tokenId,
-      skill: "strike" as const,
-    }));
-    await Promise.all([poll(room, 0, actions[0]), poll(room, 1, actions[1])]);
+    assert.ok(
+      Date.now() < battleTimeout,
+      "Backend did not terminate combat by deadline",
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await poll(room, 1);
     state = await poll(room, 0);
-    assert.equal(state.battle!.round, battle.round + 1);
   }
   assert.ok(state.certificate);
   const result = state.certificate!;
@@ -264,6 +282,59 @@ async function main() {
   assert.ok(
     (await player(bob)).cards.some((c) => c.token_id === teamB[0].token_id),
   );
+  // QA-only no-damage fixture exercises the real signed deadline/refund path.
+  teamA.splice(0, 3, ...(await ensure(alice)));
+  teamB.splice(0, 3, ...(await ensure(bob)));
+  const timed = await create();
+  await poll(timed, 0);
+  await poll(timed, 1);
+  const readyA = await poll(timed, 0, {
+    round: 1,
+    actor: "",
+    target: "",
+    skill: "auto",
+  });
+  assert.equal(readyA.battleStartedAt, null);
+  const readyB = await poll(timed, 1, {
+    round: 1,
+    actor: "",
+    target: "",
+    skill: "auto",
+  });
+  assert.equal(readyB.deadlineAt! - readyB.battleStartedAt!, 90000);
+  const { rows } = await pool.query(
+    "SELECT data FROM scanmon_pvp_rooms WHERE id=$1",
+    [timed.id],
+  );
+  const fixture = rows[0].data;
+  fixture.battle.teams.forEach((t: { atk: number }[]) =>
+    t.forEach((c) => (c.atk = 0)),
+  );
+  fixture.battleStartedAt = Date.now() - 80000;
+  fixture.lastSeen = [Date.now(), Date.now()];
+  await pool.query("UPDATE scanmon_pvp_rooms SET data=$2 WHERE id=$1", [
+    timed.id,
+    JSON.stringify(fixture),
+  ]);
+  const beforeDeadline = await poll(timed, 0);
+  assert.equal(beforeDeadline.battle?.phase, "choosing");
+  assert.equal(beforeDeadline.certificate, null);
+  await pool.query(
+    "UPDATE scanmon_pvp_rooms SET data=jsonb_set(data,'{battleStartedAt}', $2::jsonb) WHERE id=$1",
+    [timed.id, JSON.stringify(Date.now() - 91000)],
+  );
+  const timeout = await poll(timed, 1);
+  assert.equal(timeout.battle?.phase, "draw");
+  assert.equal(timeout.certificate?.outcome, "refund");
+  await call(bob, "claim_pvp", { room_id: timed.id, ...timeout.certificate });
+  assert.ok(
+    (await player(alice)).cards.some((c) => c.token_id === teamA[0].token_id),
+  );
+  assert.ok(
+    (await player(bob)).cards.some((c) => c.token_id === teamB[0].token_id),
+  );
+  assert.equal((await player(alice)).locked_ids.length, 0);
+  assert.equal((await player(bob)).locked_ids.length, 0);
   await pool.end();
   fs.writeFileSync(
     "smartcontract/deployments/pvp-validation.json",
@@ -273,10 +344,16 @@ async function main() {
         contractId: game,
         api,
         verifiedAt: new Date().toISOString(),
+        combat: {
+          roomId: room.id,
+          outcome: result.outcome,
+          rounds: state.battle!.round - 1,
+        },
         checks: [
           "two real players escrow owned NFTs",
           "invalid signatures and foreign actors rejected",
-          "simultaneous actions resolve exactly once",
+          "both teams auto-attack using HP and decimal ATK; repeated Attack does not reset the deadline",
+          "90s battle deadline produces signed refund and both escrow cards return (QA no-damage fixture)",
           "settlement and repeat claim safe",
           "90s disconnect cancels and both NFT stakes return",
         ],
