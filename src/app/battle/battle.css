@@ -992,3 +992,20 @@
   );
   pointer-events: none;
 }
+
+/* Desktop phone width depends on window height, not the browser's width. */
+@media (min-width: 768px) {
+  .battle-menu .battle-panel {
+    container-type: inline-size;
+  }
+  .battle-menu .battle-quick .battle-yellow {
+    font-size: clamp(12px, 5.5cqw, 25px);
+  }
+  .battle-menu .battle-daily .battle-yellow {
+    font-size: clamp(12px, 5cqw, 23px);
+  }
+  .battle-menu .battle-panel .battle-yellow {
+    padding-inline: clamp(6px, 2cqw, 16px);
+    white-space: nowrap;
+  }
+}
