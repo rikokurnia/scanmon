@@ -3,19 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GAME_ID } from "@/lib/near/config";
+import { explorerAccount, explorerTx, GAME_ID } from "@/lib/near/config";
 import {
   type CardAssetEntry,
   type CollectionScreenProps,
   resolveCardAsset,
 } from "./card-catalog";
-import { CARD_BACK_META, formatContractShort } from "./card-back-meta";
+import {
+  CARD_BACK_META,
+  formatContractShort,
+  formatTxHashShort,
+} from "./card-back-meta";
 import TokenChart from "./token-chart";
 import "./collection.css";
 
 interface ResolvedOwnedCard {
   key: string;
   asset: CardAssetEntry;
+  txHash?: string;
 }
 
 const MAX_TILT_DEG = 10;
@@ -42,12 +47,27 @@ function StarIcon() {
 function CardBackFace({
   asset,
   active,
+  txHash,
 }: {
   asset: CardAssetEntry;
   active: boolean;
+  txHash?: string;
 }) {
   const meta = CARD_BACK_META[asset.id];
-  const contractLabel = formatContractShort(GAME_ID);
+  const proofLabel = txHash ? "On-chain proof" : "Card contract";
+  const proofText = txHash
+    ? formatTxHashShort(txHash)
+    : formatContractShort(GAME_ID);
+  const explorerHref = txHash
+    ? explorerTx(txHash)
+    : GAME_ID
+      ? explorerAccount(GAME_ID)
+      : undefined;
+  const proofTitle = txHash
+    ? `View transaction ${txHash} on NEAR Explorer`
+    : GAME_ID
+      ? `View contract ${GAME_ID} on NEAR Explorer`
+      : undefined;
 
   return (
     <div className={`card-back card-back--${asset.variant}`}>
@@ -83,18 +103,42 @@ function CardBackFace({
         <p className="card-back-tagline">{meta.tagline}</p>
 
         <div className="card-back-contract-block">
-          <span className="card-back-contract-label">Card contract</span>
-          <div className="card-back-contract-pill" title={GAME_ID || undefined}>
-            <Image
-              src="/assets/tokens/near.svg"
-              alt=""
-              width={14}
-              height={14}
-              className="card-back-near-icon"
-              unoptimized
-            />
-            <span>{contractLabel}</span>
-          </div>
+          <span className="card-back-contract-label">{proofLabel}</span>
+          {explorerHref ? (
+            <a
+              href={explorerHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-back-contract-pill"
+              title={proofTitle}
+              aria-label={proofTitle}
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src="/assets/tokens/near-original.png"
+                alt=""
+                width={14}
+                height={14}
+                className="card-back-near-icon"
+                unoptimized
+              />
+              <span>{proofText}</span>
+            </a>
+          ) : (
+            <div className="card-back-contract-pill">
+              <Image
+                src="/assets/tokens/near-original.png"
+                alt=""
+                width={14}
+                height={14}
+                className="card-back-near-icon"
+                unoptimized
+              />
+              <span>{proofText}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -105,6 +149,7 @@ function CardBackFace({
 
 function ReflectiveCardFrame({
   asset,
+  txHash,
   priority,
   isActiveSlide,
   flipped,
@@ -112,6 +157,7 @@ function ReflectiveCardFrame({
   onSwipeNavigate,
 }: {
   asset: CardAssetEntry;
+  txHash?: string;
   priority: boolean;
   isActiveSlide: boolean;
   flipped: boolean;
@@ -290,7 +336,11 @@ function ReflectiveCardFrame({
         </div>
 
         <div className="collection-card-face collection-card-face--back">
-          <CardBackFace asset={asset} active={isActiveSlide && flipped} />
+          <CardBackFace
+            asset={asset}
+            active={isActiveSlide && flipped}
+            txHash={txHash}
+          />
           <div className="collection-card-idle-shine" aria-hidden="true" />
           <div className="collection-card-foil" aria-hidden="true" />
           <div className="collection-card-gloss" aria-hidden="true" />
@@ -345,6 +395,7 @@ export default function CollectionScreen({
       list.push({
         key: item.instanceId ?? `${asset.id}-${idx}`,
         asset,
+        txHash: item.txHash,
       });
     });
     return list;
@@ -597,6 +648,7 @@ export default function CollectionScreen({
                 >
                   <ReflectiveCardFrame
                     asset={card.asset}
+                    txHash={card.txHash}
                     priority={index === 0}
                     isActiveSlide={index === safeIndex}
                     flipped={isFlipped}

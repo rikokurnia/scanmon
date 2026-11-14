@@ -16,11 +16,19 @@ export type TokenFeedSource =
       fallbackLogoUrl: string;
     };
 
+export interface CardChartTheme {
+  lineColor: string;
+  topColor: string;
+  bottomColor: string;
+  priceTextColor: string;
+}
+
 export interface CardBackMeta {
   stars: 1 | 3 | 4;
   tagline: string;
   ticker: string;
   tokenName: string;
+  chartTheme: CardChartTheme;
   feed: TokenFeedSource;
 }
 
@@ -30,6 +38,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "A calm collector with a mischievous streak.",
     ticker: "PEPE",
     tokenName: "Pepe",
+    chartTheme: {
+      lineColor: "#4ade80",
+      topColor: "rgba(74, 222, 128, 0.38)",
+      bottomColor: "rgba(74, 222, 128, 0.02)",
+      priceTextColor: "#6ee7a0",
+    },
     feed: {
       kind: "cex",
       binanceSymbol: "PEPEUSDT",
@@ -44,6 +58,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Heavy lifts, golden fur, unstoppable meme power.",
     ticker: "DOGE",
     tokenName: "Dogecoin",
+    chartTheme: {
+      lineColor: "#fb923c",
+      topColor: "rgba(251, 146, 60, 0.38)",
+      bottomColor: "rgba(251, 146, 60, 0.02)",
+      priceTextColor: "#fdba74",
+    },
     feed: {
       kind: "cex",
       binanceSymbol: "DOGEUSDT",
@@ -58,6 +78,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Sparks fly fast whenever trouble draws near.",
     ticker: "PIKACHU",
     tokenName: "Pikachu",
+    chartTheme: {
+      lineColor: "#ffd34e",
+      topColor: "rgba(255, 211, 78, 0.38)",
+      bottomColor: "rgba(255, 211, 78, 0.02)",
+      priceTextColor: "#ffe07a",
+    },
     feed: {
       kind: "dex",
       network: "eth",
@@ -72,6 +98,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Fearless rookie ready to charge any raid.",
     ticker: "DIGIMON",
     tokenName: "Digimon",
+    chartTheme: {
+      lineColor: "#38bdf8",
+      topColor: "rgba(56, 189, 248, 0.38)",
+      bottomColor: "rgba(56, 189, 248, 0.02)",
+      priceTextColor: "#7dd3fc",
+    },
     feed: {
       kind: "dex",
       network: "solana",
@@ -86,6 +118,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Leaves a rainbow trail across deep space.",
     ticker: "NYAN",
     tokenName: "Nyan Cat",
+    chartTheme: {
+      lineColor: "#ff5ca8",
+      topColor: "rgba(255, 92, 168, 0.38)",
+      bottomColor: "rgba(255, 92, 168, 0.02)",
+      priceTextColor: "#ff85be",
+    },
     feed: {
       kind: "dex",
       network: "solana",
@@ -100,6 +138,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Grins from the shadows before striking first.",
     ticker: "GENGAR",
     tokenName: "Gengar",
+    chartTheme: {
+      lineColor: "#a855f7",
+      topColor: "rgba(168, 85, 247, 0.38)",
+      bottomColor: "rgba(168, 85, 247, 0.02)",
+      priceTextColor: "#c084fc",
+    },
     feed: {
       kind: "dex",
       network: "pulsechain",
@@ -114,6 +158,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Glides over canyon winds with fiery spirit.",
     ticker: "DIGIMON",
     tokenName: "Digimon",
+    chartTheme: {
+      lineColor: "#fb7185",
+      topColor: "rgba(251, 113, 133, 0.38)",
+      bottomColor: "rgba(251, 113, 133, 0.02)",
+      priceTextColor: "#fda4af",
+    },
     feed: {
       kind: "dex",
       network: "solana",
@@ -128,6 +178,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Unbothered by raids, steady on every dock.",
     ticker: "CHILLGUY",
     tokenName: "Just a chill guy",
+    chartTheme: {
+      lineColor: "#2dd4bf",
+      topColor: "rgba(45, 212, 191, 0.38)",
+      bottomColor: "rgba(45, 212, 191, 0.02)",
+      priceTextColor: "#5eead4",
+    },
     feed: {
       kind: "dex",
       network: "solana",
@@ -142,6 +198,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
     tagline: "Apex rainbow sovereign of the scanMon arena.",
     ticker: "HMSTR",
     tokenName: "Hamster Kombat",
+    chartTheme: {
+      lineColor: "#e879f9",
+      topColor: "rgba(232, 121, 249, 0.38)",
+      bottomColor: "rgba(232, 121, 249, 0.02)",
+      priceTextColor: "#f0abfc",
+    },
     feed: {
       kind: "cex",
       binanceSymbol: "HMSTRUSDT",
@@ -164,6 +226,13 @@ export function formatContractShort(contractId: string): string {
     return `${prefix}...${suffix}`;
   }
   return `${trimmed.slice(0, 8)}...${trimmed.slice(-5)}`;
+}
+
+export function formatTxHashShort(hash: string): string {
+  const trimmed = hash.trim();
+  if (!trimmed) return "";
+  if (trimmed.length <= 15) return trimmed;
+  return `${trimmed.slice(0, 6)}...${trimmed.slice(-5)}`;
 }
 
 export function formatTokenUsdPrice(price: number): string {

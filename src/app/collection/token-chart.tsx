@@ -89,12 +89,12 @@ export default function TokenChart({
         },
       },
       leftPriceScale: {
+        visible: false,
+      },
+      rightPriceScale: {
         visible: true,
         borderVisible: false,
         scaleMargins: { top: 0.14, bottom: 0.12 },
-      },
-      rightPriceScale: {
-        visible: false,
       },
       timeScale: {
         borderColor: "rgba(255, 255, 255, 0.25)",
@@ -114,9 +114,9 @@ export default function TokenChart({
     });
 
     const area = chart.addSeries(AreaSeries, {
-      lineColor: "#ff4fa3",
-      topColor: "rgba(255, 79, 163, 0.38)",
-      bottomColor: "rgba(255, 79, 163, 0.02)",
+      lineColor: meta.chartTheme.lineColor,
+      topColor: meta.chartTheme.topColor,
+      bottomColor: meta.chartTheme.bottomColor,
       lineWidth: 2,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -152,7 +152,7 @@ export default function TokenChart({
       chart?.remove();
       chart = null;
     };
-  }, [data]);
+  }, [data, meta.chartTheme]);
 
   const logoSrc =
     data?.logoUrl ||
@@ -180,7 +180,10 @@ export default function TokenChart({
           )}
           <span className="card-back-token-ticker">{ticker}</span>
           {data ? (
-            <span className="card-back-token-price">
+            <span
+              className="card-back-token-price"
+              style={{ color: meta.chartTheme.priceTextColor }}
+            >
               {formatTokenUsdPrice(data.priceUsd)}
             </span>
           ) : null}

@@ -463,12 +463,26 @@
   font-weight: 800;
   line-height: 1.2;
   color: var(--navy);
+  text-decoration: none;
+  transition: transform 0.14s ease, background-color 0.14s ease;
+}
+
+a.card-back-contract-pill:hover {
+  background: #f3f7ff;
+  transform: translateY(-1px);
+}
+
+a.card-back-contract-pill:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
 }
 
 .card-back-near-icon {
-  width: 12px;
-  height: 12px;
-  object-fit: contain;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 /* TradingView Area Chart Panel */

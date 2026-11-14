@@ -117,6 +117,8 @@ export interface OwnedCollectionCard {
   instanceId?: string;
   /** Canonical card ID matching CARD_CATALOG */
   cardId: CardId | string;
+  /** On-chain NEAR transaction hash from scan mint, boss claim, or trade */
+  txHash?: string;
 }
 
 export interface CollectionScreenProps {
