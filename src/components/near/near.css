@@ -480,7 +480,8 @@
   }
 }
 /* Same warm wooden surface as Tomo; settings controls retain their existing layout. */
-.settings-dialog {
+.settings-dialog,
+#privy-modal-content {
   background-color: #bf8149;
   background-image:
     repeating-linear-gradient(
@@ -576,4 +577,10 @@
 }
 body:has(.tx-proof-reveal[open]) .reveal-status {
   visibility: hidden;
+}
+
+/* Privy renders its screens inside the portal; let the shared wood show through. */
+#privy-modal-content {
+  --privy-color-background: transparent;
+  --privy-color-background-2: #fff8e8;
 }

@@ -192,8 +192,10 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(85vw, 320px);
-  height: auto;
+  width: 90svh;
+  height: 90svh;
+  max-width: none;
+  object-fit: contain;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -265,10 +267,6 @@
   .card-gloss {
     display: none;
   }
-}
-.reveal-starfall {
-  width: min(127.5vw, 480px);
-  max-width: none;
 }
 .mystery-barcode {
   position: absolute;
