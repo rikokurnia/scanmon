@@ -3,7 +3,7 @@
 
 # scanMon
 
-**Scan the everyday. Collect the unexpected. Play for keeps.**
+**Scan the everyday. Collect the MONSTER. Play for keeps.**
 
 A mobile browser game where product barcodes become collectible monsters, NPCs trade from real budgets, and players battle with cards they own on NEAR.
 
