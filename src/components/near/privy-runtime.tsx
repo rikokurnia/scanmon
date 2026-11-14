@@ -26,6 +26,7 @@ import {
 } from "@/lib/near/game-store";
 import { registerGoogleLogin } from "@/lib/near/wallet-selector";
 import type { Outcome } from "@/lib/near/rpc";
+import { createGoogleWalletActivation } from "@/lib/near/google-wallet";
 const hex = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 const unhex = (str: string) =>
@@ -134,11 +135,37 @@ function Bridge() {
       new JsonRpcProvider({ url: RPC_URL }),
       signer,
     );
+    const activate = createGoogleWalletActivation({
+      checkAccessKey: () =>
+        account.provider.viewAccessKey(address, publicKey, {
+          finality: "final",
+        }),
+      sponsor: async () => {
+        const token = await actions.current.getAccessToken();
+        if (!token)
+          throw new Error("Session expired. Sign in with Google again.");
+        const response = await fetch("/api/near/sponsor", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accountId: address }),
+        });
+        const result = await response.json();
+        if (!response.ok)
+          throw new Error(
+            result.error ??
+              "Wallet activation unavailable. Retry or fund your account with test NEAR.",
+          );
+      },
+    });
     setWallet(
       address,
       "Google · Privy NEAR",
-      async (call) =>
-        (await account.signAndSendTransaction({
+      async (call) => {
+        await activate();
+        return (await account.signAndSendTransaction({
           receiverId: call.receiverId,
           actions: [
             actionCreators.functionCall(
@@ -150,7 +177,8 @@ function Bridge() {
           ],
           waitUntil: "FINAL",
           throwOnFailure: false,
-        })) as unknown as Outcome,
+        })) as unknown as Outcome;
+      },
       async () => {
         connected.current = null;
         localStorage.removeItem("scanmon:wallet-mode");
@@ -160,23 +188,12 @@ function Bridge() {
     // Server verifies the authenticated user's linked NEAR wallet before sponsoring.
     void (async () => {
       try {
-        const token = await actions.current.getAccessToken();
-        const response = await fetch("/api/near/sponsor", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ accountId: address }),
-        });
-        const result = await response.json();
-        if (!response.ok)
-          gameUi.error(
-            result.error ?? "Add test NEAR to your account to cover gas.",
-          );
-      } catch {
+        await activate();
+      } catch (error) {
         gameUi.error(
-          "Gas sponsorship unavailable. You can fund your account with test NEAR.",
+          error instanceof Error
+            ? error.message
+            : "Gas sponsorship unavailable. You can fund your account with test NEAR.",
         );
       }
       await refreshGame();
