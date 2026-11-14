@@ -47,7 +47,7 @@ export function createChainMarketAdapter(): MarketAdapter {
     },
     subscribe: subscribeGame,
     async negotiate(request) {
-      const quote = await view<{
+      const quotePromise = view<{
         amount: string;
         stock: number;
         available: boolean;
@@ -55,8 +55,49 @@ export function createChainMarketAdapter(): MarketAdapter {
       }>(GAME_ID, "quote", {
         card_id: request.cardId,
         direction: request.direction,
-      });
-      if (!quote.available)
+      }).catch(() => null);
+
+      let response;
+      try {
+        response = await merchant.negotiate(request);
+      } catch (err) {
+        if (request.signal.aborted) {
+          throw err;
+        }
+        response = {
+          reply: "Hold on, pal—my counter ledger is catching its breath. Try again!",
+          offer: null,
+          status: "error" as const,
+          offerIntent: "none" as const,
+          errorMessage:
+            err instanceof Error ? err.message : "Merchant reply failed.",
+        };
+      }
+
+      if (request.signal.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+
+      const quote = await quotePromise;
+
+      // General questions / small talk stay conversational with no forced offer.
+      if (response.offerIntent === "none" || (!response.offer && response.offerIntent !== "active")) {
+        return {
+          ...response,
+          offer: null,
+        };
+      }
+
+      if (response.offerIntent === "declined" || response.status === "declined") {
+        return {
+          ...response,
+          offer: null,
+          status: "declined",
+          offerIntent: "declined",
+        };
+      }
+
+      if (quote && !quote.available) {
         return {
           reply:
             request.direction === "buy"
@@ -64,29 +105,36 @@ export function createChainMarketAdapter(): MarketAdapter {
               : "Buying paused: my USDC budget is reserved or exhausted.",
           offer: null,
           status: "declined",
+          offerIntent: "declined",
         };
-      let response;
-      try {
-        response = await merchant.negotiate(request);
-      } catch {
-        response = { reply: quote.reason, offer: null, status: "ok" as const };
       }
-      if (request.signal.aborted)
-        throw new DOMException("Aborted", "AbortError");
-      // The AI may write dialogue; only the contract sets price, availability and settlement.
-      const amount = displayUnits(quote.amount, 6, 6);
+
+      // Preserve Koban's real-time LLM reply while anchoring official settlement
+      // to the contract's exact USDC price when a deal is active.
+      const contractAmount = quote
+        ? BigInt(quote.amount || "0") % BigInt(10_000) === BigInt(0)
+          ? displayUnits(quote.amount, 6, 2)
+          : displayUnits(quote.amount, 6, 6).replace(/\.?0+$/, "")
+        : response.offer?.usdcAmount;
+
+      if (!contractAmount) {
+        return {
+          ...response,
+          offer: null,
+        };
+      }
+
       return {
         ...response,
-        reply: `${quote.reason} ${request.direction === "buy" ? "My price" : "I can pay"}: ${amount} USDC.`,
         status: "ok",
         offerIntent: "active",
         offer: {
-          offerId: crypto.randomUUID(),
+          offerId: response.offer?.offerId ?? crypto.randomUUID(),
           cardId: request.cardId,
           direction: request.direction,
           instanceId: request.instanceId,
-          usdcAmount: amount,
-          expiresAt: Date.now() + 120000,
+          usdcAmount: contractAmount,
+          expiresAt: Date.now() + 120_000,
           status: "active",
         },
       };

@@ -192,6 +192,14 @@ export default function MarketScreen() {
     return [...sellCards.eligible, ...sellCards.locked];
   }, [sellCards]);
 
+  const ownedCountByCardId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const card of snapshot.ownedCards) {
+      counts.set(card.cardId, (counts.get(card.cardId) ?? 0) + 1);
+    }
+    return counts;
+  }, [snapshot.ownedCards]);
+
   // Track whether the 2-column card grid has more cards below the fold.
   const updateScrollCue = useCallback(() => {
     const el = gridRef.current;
@@ -658,38 +666,47 @@ export default function MarketScreen() {
                     onScroll={updateScrollCue}
                     aria-label="Buy cards catalog"
                   >
-                    {buyCards.map((item) => (
-                      <button
-                        key={item.asset.id}
-                        type="button"
-                        disabled={item.outOfStock}
-                        className={`market-card-button ${item.outOfStock ? "is-unavailable" : ""}`}
-                        aria-label={
-                          item.outOfStock
-                            ? `${item.asset.name}, Out of stock`
-                            : `Negotiate to buy ${item.asset.name}`
-                        }
-                        onClick={() =>
-                          handleSelectBuyCard(item.asset.id, item.outOfStock)
-                        }
-                      >
-                        <span className="market-card-media">
-                          <img
-                            src={item.asset.cardImageSrc}
-                            alt={`${item.asset.name} card`}
-                            width={item.asset.width}
-                            height={item.asset.height}
-                            className="market-card-img"
-                            draggable={false}
-                          />
-                          {item.outOfStock && (
-                            <span className="market-card-badge">
-                              Out of stock
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    ))}
+                    {buyCards.map((item) => {
+                      const ownedCount =
+                        ownedCountByCardId.get(item.asset.id) ?? 0;
+                      return (
+                        <button
+                          key={item.asset.id}
+                          type="button"
+                          disabled={item.outOfStock}
+                          className={`market-card-button ${item.outOfStock ? "is-unavailable" : ""}`}
+                          aria-label={
+                            item.outOfStock
+                              ? `${item.asset.name}, Out of stock${ownedCount > 0 ? `, Owned ${ownedCount}x` : ""}`
+                              : `Negotiate to buy ${item.asset.name}${ownedCount > 0 ? `, Owned ${ownedCount}x` : ""}`
+                          }
+                          onClick={() =>
+                            handleSelectBuyCard(item.asset.id, item.outOfStock)
+                          }
+                        >
+                          <span className="market-card-media">
+                            <img
+                              src={item.asset.cardImageSrc}
+                              alt={`${item.asset.name} card`}
+                              width={item.asset.width}
+                              height={item.asset.height}
+                              className="market-card-img"
+                              draggable={false}
+                            />
+                            {ownedCount > 0 && (
+                              <span className="market-card-owned-badge">
+                                Owned {ownedCount}x
+                              </span>
+                            )}
+                            {item.outOfStock && (
+                              <span className="market-card-badge">
+                                Out of stock
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   {canScrollMore && (
                     <button
@@ -814,7 +831,17 @@ export default function MarketScreen() {
                 </div>
 
                 <div className="offer-panel" aria-live="polite">
-                  <h2 className="offer-panel-label">Koban’s offer</h2>
+                  <div className="offer-panel-header">
+                    <h2 className="offer-panel-label">Koban’s offer</h2>
+                    {direction === "buy" &&
+                      (ownedCountByCardId.get(selectedCardAsset.id) ?? 0) >
+                        0 && (
+                        <span className="offer-owned-note">
+                          Owned{" "}
+                          {ownedCountByCardId.get(selectedCardAsset.id)}x
+                        </span>
+                      )}
+                  </div>
 
                   {isNegotiationComplete ? (
                     <>

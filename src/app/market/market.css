@@ -391,6 +391,24 @@
   filter: grayscale(0.45) brightness(0.76);
 }
 
+.market-card-owned-badge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border: 2px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-mint);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--market-navy);
+  box-shadow: 0 2px 6px rgba(15, 7, 2, 0.25);
+  pointer-events: none;
+}
+
 .market-card-badge {
   position: absolute;
   left: 50%;
@@ -545,6 +563,14 @@
   min-width: 0;
 }
 
+.offer-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .offer-panel-label {
   margin: 0;
   font-family: "Baloo 2", "Nunito", sans-serif;
@@ -552,6 +578,20 @@
   font-weight: 800;
   line-height: 1.1;
   color: var(--market-navy);
+}
+
+.offer-owned-note {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1.5px solid var(--market-navy);
+  border-radius: 999px;
+  background: var(--market-mint);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--market-navy);
+  white-space: nowrap;
 }
 
 .offer-amount-block {

@@ -32,9 +32,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.18);
-  filter: blur(22px) saturate(1.12) brightness(0.54);
-  opacity: 0.92;
+  transform: scale(1.06);
+  filter: blur(7px) saturate(1.08) brightness(0.56);
+  opacity: 0.96;
 }
 
 .collection-backdrop-scrim {
@@ -42,9 +42,9 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(13, 19, 36, 0.42) 0%,
-    rgba(13, 19, 36, 0.56) 55%,
-    rgba(13, 19, 36, 0.72) 100%
+    rgba(13, 19, 36, 0.32) 0%,
+    rgba(13, 19, 36, 0.44) 55%,
+    rgba(13, 19, 36, 0.62) 100%
   );
 }
 
@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px 0;
-  perspective: 900px;
+  perspective: 1100px;
 }
 
 .collection-card-frame {
@@ -114,35 +114,66 @@
   position: relative;
   width: min(100%, calc((100svh - 260px) * 5 / 7), 316px);
   aspect-ratio: 5 / 7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 18px;
-  overflow: hidden;
   transform-style: preserve-3d;
   will-change: transform;
   touch-action: none;
-  box-shadow: 0 12px 28px rgba(8, 12, 24, 0.42);
+  cursor: pointer;
+}
+
+.collection-card-frame:focus-visible {
+  outline: 3px solid #80daf4;
+  outline-offset: 4px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .collection-card-frame {
     transform: rotateX(var(--rx)) rotateY(var(--ry))
       scale(var(--card-scale, 1));
-    transition:
-      transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 300ms ease-out;
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .collection-card-frame[data-tilting="true"] {
     --card-scale: 1.025;
-    transition:
-      transform 70ms linear,
-      box-shadow 200ms ease-out;
-    box-shadow:
-      0 22px 42px -10px rgba(6, 10, 22, 0.56),
-      0 10px 20px rgba(6, 10, 22, 0.32);
+    transition: transform 70ms linear;
   }
+}
+
+.collection-card-flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .collection-card-flipper {
+    transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.collection-card-flipper.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.collection-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 12px 28px rgba(8, 12, 24, 0.42);
+}
+
+.collection-card-frame[data-tilting="true"] .collection-card-face {
+  box-shadow:
+    0 22px 42px -10px rgba(6, 10, 22, 0.56),
+    0 10px 20px rgba(6, 10, 22, 0.32);
+}
+
+.collection-card-face--back {
+  transform: rotateY(180deg);
 }
 
 .collection-card-image {
@@ -177,8 +208,8 @@
     115deg,
     transparent 24%,
     rgba(255, 255, 255, 0.08) 38%,
-    rgba(255, 255, 255, 0.42) 48%,
-    rgba(166, 245, 206, 0.24) 52%,
+    rgba(255, 255, 255, 0.38) 48%,
+    rgba(166, 245, 206, 0.22) 52%,
     rgba(255, 255, 255, 0.08) 60%,
     transparent 74%
   );
@@ -189,7 +220,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .collection-card-frame:not([data-tilting="true"]) .collection-card-idle-shine {
-    opacity: 0.72;
+    opacity: 0.68;
     animation: collection-idle-sheen 4.4s ease-in-out infinite;
   }
 }
@@ -206,35 +237,27 @@
 }
 
 .collection-card-foil {
-  background:
-    linear-gradient(
-      115deg,
-      transparent 18%,
-      rgba(128, 218, 244, 0.42) 34%,
-      rgba(40, 214, 160, 0.36) 46%,
-      rgba(255, 211, 78, 0.42) 56%,
-      rgba(196, 165, 255, 0.38) 68%,
-      transparent 84%
-    );
+  background: linear-gradient(
+    115deg,
+    transparent 18%,
+    rgba(128, 218, 244, 0.38) 34%,
+    rgba(40, 214, 160, 0.34) 46%,
+    rgba(255, 211, 78, 0.38) 56%,
+    rgba(196, 165, 255, 0.34) 68%,
+    transparent 84%
+  );
   background-size: 220% 220%;
   background-position: var(--mx) var(--my);
   mix-blend-mode: color-dodge;
 }
 
 .collection-card-gloss {
-  background:
-    radial-gradient(
-      circle at var(--mx) var(--my),
-      rgba(255, 255, 255, 0.62) 0%,
-      rgba(255, 255, 255, 0.2) 28%,
-      rgba(255, 255, 255, 0) 62%
-    ),
-    linear-gradient(
-      130deg,
-      rgba(255, 255, 255, 0.24) 0%,
-      rgba(255, 255, 255, 0.04) 38%,
-      transparent 55%
-    );
+  background: radial-gradient(
+    circle at var(--mx) var(--my),
+    rgba(255, 255, 255, 0.54) 0%,
+    rgba(255, 255, 255, 0.16) 30%,
+    rgba(255, 255, 255, 0) 64%
+  );
   mix-blend-mode: overlay;
 }
 
@@ -242,6 +265,314 @@
   box-shadow:
     inset 0 0 0 1.5px rgba(255, 255, 255, 0.55),
     inset 0 1px 12px rgba(255, 255, 255, 0.25);
+}
+
+/* Card Back Layout (matching pepe-card-back reference across yellow, blue, boss) */
+.card-back {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  border: 2.5px solid var(--navy);
+  padding: 10px 11px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.card-back--yellow {
+  background: linear-gradient(
+    135deg,
+    #ffe989 0%,
+    #f6ca4b 26%,
+    #fff1ad 52%,
+    #e8b836 78%,
+    #ffdb6d 100%
+  );
+}
+
+.card-back--blue {
+  background: linear-gradient(
+    135deg,
+    #dcf3ff 0%,
+    #90d3fa 28%,
+    #e9f8ff 54%,
+    #77c1eb 80%,
+    #b7e3ff 100%
+  );
+}
+
+.card-back--boss {
+  background: linear-gradient(
+    135deg,
+    #4c2b75 0%,
+    #2f194b 38%,
+    #5d378b 68%,
+    #26143d 100%
+  );
+}
+
+.card-back-inner-border {
+  position: absolute;
+  inset: 4px;
+  border-radius: 14px;
+  border: 1.25px solid rgba(25, 37, 70, 0.55);
+  pointer-events: none;
+}
+
+.card-back--boss .card-back-inner-border {
+  border-color: rgba(216, 180, 254, 0.45);
+}
+
+.card-back-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 2px 0;
+}
+
+.card-back-brand {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.card-back-brand-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.card-back-wordmark {
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+}
+
+.card-back--boss .card-back-wordmark {
+  color: var(--paper);
+}
+
+.card-back-wordmark > span {
+  color: var(--mint);
+}
+
+.card-back-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-back-star {
+  width: 20px;
+  height: 20px;
+}
+
+.card-back--yellow .card-back-star {
+  color: #ffd34e;
+}
+
+.card-back--blue .card-back-star {
+  color: #7ed0ff;
+}
+
+.card-back--boss .card-back-star {
+  color: #ffd34e;
+}
+
+.card-back-info {
+  position: relative;
+  z-index: 1;
+  background: #fff9ea;
+  border: 2px solid var(--navy);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #fff9ea, inset 0 0 0 3px rgba(25, 37, 70, 0.14);
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.card-back-title {
+  margin: 0;
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: clamp(20px, 6vw, 27px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+  font-style: italic;
+  -webkit-text-stroke: 3.5px var(--navy);
+  paint-order: stroke fill;
+}
+
+.card-back--yellow .card-back-title {
+  color: #ffd34e;
+}
+
+.card-back--blue .card-back-title {
+  color: #84d2ff;
+}
+
+.card-back--boss .card-back-title {
+  font-size: clamp(16px, 4.6vw, 21px);
+  color: #d9b6ff;
+}
+
+.card-back-tagline {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--navy);
+  max-width: 92%;
+}
+
+.card-back-contract-block {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.card-back-contract-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.card-back-contract-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1.6px solid var(--navy);
+  border-radius: 999px;
+  background: #fffdf6;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--navy);
+}
+
+.card-back-near-icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+/* TradingView Area Chart Panel */
+.card-back-chart-box {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  background: #07080d;
+  border: 2px solid var(--navy);
+  border-radius: 14px;
+  padding: 7px 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.card-back-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.card-back-token-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.card-back-token-logo {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.card-back-token-fallback {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #23283d;
+  color: #f4f6ff;
+  font-size: 9px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.card-back-token-ticker {
+  font-size: 11px;
+  font-weight: 900;
+  color: #e9ecf8;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.card-back-token-price {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #ff77b7;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-back-chart-range {
+  font-size: 10.5px;
+  font-weight: 900;
+  color: #d6dcf0;
+  flex: none;
+}
+
+.card-back-chart-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.card-back-chart-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.card-back-chart-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ba3bd;
+  text-align: center;
 }
 
 .collection-arrow {
@@ -418,6 +749,15 @@
     margin-top: 10px;
     font-size: 18px;
   }
+
+  .card-back {
+    padding: 8px 9px 9px;
+    gap: 6px;
+  }
+
+  .card-back-info {
+    padding: 6px 8px 8px;
+  }
 }
 
 @media (max-height: 700px) and (max-width: 480px) {
@@ -433,5 +773,10 @@
 
   .collection-counter {
     margin-top: 10px;
+  }
+
+  .card-back {
+    padding: 8px 9px 9px;
+    gap: 6px;
   }
 }

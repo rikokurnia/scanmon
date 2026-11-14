@@ -3,11 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GAME_ID } from "@/lib/near/config";
 import {
   type CardAssetEntry,
   type CollectionScreenProps,
   resolveCardAsset,
 } from "./card-catalog";
+import { CARD_BACK_META, formatContractShort } from "./card-back-meta";
+import TokenChart from "./token-chart";
 import "./collection.css";
 
 interface ResolvedOwnedCard {
@@ -16,23 +19,114 @@ interface ResolvedOwnedCard {
 }
 
 const MAX_TILT_DEG = 10;
+const TAP_SLOP_PX = 8;
+
+function StarIcon() {
+  return (
+    <svg
+      className="card-back-star"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2.4L14.95 8.38L21.55 9.34L16.77 14L17.9 20.57L12 17.47L6.1 20.57L7.23 14L2.45 9.34L9.05 8.38L12 2.4Z"
+        stroke="#192546"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CardBackFace({
+  asset,
+  active,
+}: {
+  asset: CardAssetEntry;
+  active: boolean;
+}) {
+  const meta = CARD_BACK_META[asset.id];
+  const contractLabel = formatContractShort(GAME_ID);
+
+  return (
+    <div className={`card-back card-back--${asset.variant}`}>
+      <div className="card-back-inner-border" aria-hidden="true" />
+
+      <div className="card-back-top">
+        <div className="card-back-brand">
+          <Image
+            src="/assets/logo-scanmon.png"
+            alt=""
+            width={30}
+            height={30}
+            className="card-back-brand-logo"
+            unoptimized
+          />
+          <span className="card-back-wordmark">
+            scan<span>Mon</span>
+          </span>
+        </div>
+
+        <div
+          className="card-back-stars"
+          aria-label={`${meta.stars} star rarity`}
+        >
+          {Array.from({ length: meta.stars }, (_, i) => (
+            <StarIcon key={i} />
+          ))}
+        </div>
+      </div>
+
+      <div className="card-back-info">
+        <h2 className="card-back-title">{asset.name.toUpperCase()}</h2>
+        <p className="card-back-tagline">{meta.tagline}</p>
+
+        <div className="card-back-contract-block">
+          <span className="card-back-contract-label">Card contract</span>
+          <div className="card-back-contract-pill" title={GAME_ID || undefined}>
+            <Image
+              src="/assets/tokens/near.svg"
+              alt=""
+              width={14}
+              height={14}
+              className="card-back-near-icon"
+              unoptimized
+            />
+            <span>{contractLabel}</span>
+          </div>
+        </div>
+      </div>
+
+      <TokenChart cardId={asset.id} active={active} />
+    </div>
+  );
+}
 
 function ReflectiveCardFrame({
   asset,
   priority,
+  isActiveSlide,
+  flipped,
+  onToggleFlip,
   onSwipeNavigate,
 }: {
   asset: CardAssetEntry;
   priority: boolean;
+  isActiveSlide: boolean;
+  flipped: boolean;
+  onToggleFlip: () => void;
   onSwipeNavigate: (direction: "prev" | "next") => void;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const tiltRafRef = useRef<number | null>(null);
-  const touchGestureRef = useRef<{
+  const gestureRef = useRef<{
     pointerId: number;
+    pointerType: string;
     startX: number;
     startY: number;
     startTime: number;
+    moved: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -76,7 +170,7 @@ function ReflectiveCardFrame({
       window.cancelAnimationFrame(tiltRafRef.current);
       tiltRafRef.current = null;
     }
-    touchGestureRef.current = null;
+    gestureRef.current = null;
     const frame = frameRef.current;
     if (!frame) return;
     delete frame.dataset.tilting;
@@ -91,14 +185,30 @@ function ReflectiveCardFrame({
     <div
       ref={frameRef}
       className="collection-card-frame"
+      role="button"
+      tabIndex={0}
+      aria-pressed={flipped}
+      aria-label={
+        flipped
+          ? `${asset.name} card back. Activate to flip to front.`
+          : `${asset.name} card front. Activate to flip to back.`
+      }
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggleFlip();
+        }
+      }}
       onPointerDown={(e) => {
+        gestureRef.current = {
+          pointerId: e.pointerId,
+          pointerType: e.pointerType,
+          startX: e.clientX,
+          startY: e.clientY,
+          startTime: performance.now(),
+          moved: false,
+        };
         if (e.pointerType === "touch") {
-          touchGestureRef.current = {
-            pointerId: e.pointerId,
-            startX: e.clientX,
-            startY: e.clientY,
-            startTime: performance.now(),
-          };
           e.currentTarget.setPointerCapture(e.pointerId);
         }
         updateTilt(e.clientX, e.clientY);
@@ -109,29 +219,48 @@ function ReflectiveCardFrame({
         }
       }}
       onPointerMove={(e) => {
+        const gesture = gestureRef.current;
         if (
           e.pointerType === "touch" &&
-          touchGestureRef.current?.pointerId !== e.pointerId
+          gesture?.pointerId !== e.pointerId
         ) {
           return;
+        }
+        if (gesture && gesture.pointerId === e.pointerId) {
+          const dist = Math.hypot(
+            e.clientX - gesture.startX,
+            e.clientY - gesture.startY,
+          );
+          if (dist > TAP_SLOP_PX) {
+            gesture.moved = true;
+          }
         }
         updateTilt(e.clientX, e.clientY);
       }}
       onPointerUp={(e) => {
-        const gesture = touchGestureRef.current;
-        if (e.pointerType === "touch" && gesture?.pointerId === e.pointerId) {
+        const gesture = gestureRef.current;
+        const matched = gesture && gesture.pointerId === e.pointerId;
+        if (matched) {
           const dx = e.clientX - gesture.startX;
           const dy = e.clientY - gesture.startY;
           const elapsed = performance.now() - gesture.startTime;
+
           if (
+            gesture.pointerType === "touch" &&
             elapsed < 350 &&
             Math.abs(dx) > 55 &&
             Math.abs(dx) > Math.abs(dy) * 1.4
           ) {
             onSwipeNavigate(dx < 0 ? "next" : "prev");
+          } else if (!gesture.moved && e.button === 0) {
+            onToggleFlip();
           }
         }
-        resetTilt();
+        if (e.pointerType === "touch") {
+          resetTilt();
+        } else {
+          gestureRef.current = null;
+        }
       }}
       onPointerLeave={(e) => {
         if (e.pointerType !== "touch") {
@@ -140,20 +269,34 @@ function ReflectiveCardFrame({
       }}
       onPointerCancel={resetTilt}
     >
-      <Image
-        src={asset.cardImageSrc}
-        alt={`${asset.name} scanMon card`}
-        width={asset.width}
-        height={asset.height}
-        className="collection-card-image"
-        priority={priority}
-        unoptimized
-        draggable={false}
-      />
-      <div className="collection-card-idle-shine" aria-hidden="true" />
-      <div className="collection-card-foil" aria-hidden="true" />
-      <div className="collection-card-gloss" aria-hidden="true" />
-      <div className="collection-card-rim" aria-hidden="true" />
+      <div
+        className={`collection-card-flipper ${flipped ? "is-flipped" : ""}`}
+      >
+        <div className="collection-card-face collection-card-face--front">
+          <Image
+            src={asset.cardImageSrc}
+            alt={`${asset.name} scanMon card`}
+            width={asset.width}
+            height={asset.height}
+            className="collection-card-image"
+            priority={priority}
+            unoptimized
+            draggable={false}
+          />
+          <div className="collection-card-idle-shine" aria-hidden="true" />
+          <div className="collection-card-foil" aria-hidden="true" />
+          <div className="collection-card-gloss" aria-hidden="true" />
+          <div className="collection-card-rim" aria-hidden="true" />
+        </div>
+
+        <div className="collection-card-face collection-card-face--back">
+          <CardBackFace asset={asset} active={isActiveSlide && flipped} />
+          <div className="collection-card-idle-shine" aria-hidden="true" />
+          <div className="collection-card-foil" aria-hidden="true" />
+          <div className="collection-card-gloss" aria-hidden="true" />
+          <div className="collection-card-rim" aria-hidden="true" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -216,6 +359,7 @@ export default function CollectionScreen({
   }, [initialCardId, resolvedCards]);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [flippedKey, setFlippedKey] = useState<string | null>(null);
   const [liveAnnouncement, setLiveAnnouncement] = useState("");
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -254,6 +398,9 @@ export default function CollectionScreen({
       resolvedCards[settled]
     ) {
       lastSettledRef.current = settled;
+      setFlippedKey((prev) =>
+        prev === resolvedCards[settled].key ? prev : null,
+      );
       setLiveAnnouncement(
         `Card ${settled + 1} of ${total}: ${resolvedCards[settled].asset.name}`,
       );
@@ -318,6 +465,7 @@ export default function CollectionScreen({
       const clamped = Math.max(0, Math.min(total - 1, nextIndex));
       hasInteractedRef.current = true;
       setCurrentIndex(clamped);
+      setFlippedKey(null);
 
       const prefersReducedMotion =
         typeof window !== "undefined" &&
@@ -437,25 +585,35 @@ export default function CollectionScreen({
               }
             }}
           >
-            {resolvedCards.map((card, index) => (
-              <div
-                key={card.key}
-                className="collection-slide"
-                role="group"
-                aria-roledescription="slide"
-                aria-label={`${index + 1} of ${total}: ${card.asset.name}`}
-              >
-                <ReflectiveCardFrame
-                  asset={card.asset}
-                  priority={index === 0}
-                  onSwipeNavigate={(direction) =>
-                    scrollToIndex(
-                      direction === "next" ? safeIndex + 1 : safeIndex - 1,
-                    )
-                  }
-                />
-              </div>
-            ))}
+            {resolvedCards.map((card, index) => {
+              const isFlipped = flippedKey === card.key;
+              return (
+                <div
+                  key={card.key}
+                  className="collection-slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`${index + 1} of ${total}: ${card.asset.name}`}
+                >
+                  <ReflectiveCardFrame
+                    asset={card.asset}
+                    priority={index === 0}
+                    isActiveSlide={index === safeIndex}
+                    flipped={isFlipped}
+                    onToggleFlip={() =>
+                      setFlippedKey((prev) =>
+                        prev === card.key ? null : card.key,
+                      )
+                    }
+                    onSwipeNavigate={(direction) =>
+                      scrollToIndex(
+                        direction === "next" ? safeIndex + 1 : safeIndex - 1,
+                      )
+                    }
+                  />
+                </div>
+              );
+            })}
           </div>
 
           <button
