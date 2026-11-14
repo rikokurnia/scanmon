@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Supplied full-art assets and animated GIFs. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { playSoundOnce } from "@/lib/sound";
 import { useEffect, useRef, useState } from "react";
 import BattleEffects from "./battle-effects";
 import BossRewardReveal from "./boss-reward-reveal";
@@ -152,6 +153,7 @@ export default function BattleScreen({ view }: { view: View }) {
       battle.reward?.status === "granted"
     )
       return;
+    playSoundOnce("victory", "raid:" + battle.id);
     const timer = setTimeout(() => setShowReward(true), 0);
     return () => clearTimeout(timer);
   }, [view, battle?.id, battle?.phase, battle?.reward?.status]);

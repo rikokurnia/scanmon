@@ -1,6 +1,7 @@
 "use client";
+import { isSoundMuted, subscribeSound, setSoundMuted } from "@/lib/sound";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   useGame,
   disconnect,
@@ -28,6 +29,7 @@ export default function SettingsModal({
   googleEnabled: boolean;
 }) {
   const game = useGame();
+  const muted = useSyncExternalStore(subscribeSound, isSoundMuted, () => false);
   const dialog = useRef<HTMLDialogElement>(null);
   const [tab, setTab] = useState<"account" | "history">("account");
   const [busy, setBusy] = useState(false);
@@ -94,6 +96,14 @@ export default function SettingsModal({
         </button>
       </div>
       <h2 id="settings-title">Settings</h2>
+      <button
+        className="chain-secondary"
+        aria-pressed={muted}
+        aria-label={muted ? "Unmute sound" : "Mute sound"}
+        onClick={() => setSoundMuted(!muted)}
+      >
+        {muted ? "Unmute sound" : "Mute sound"}
+      </button>
       <div className="settings-tabs" role="tablist" aria-label="Settings tabs">
         {(["account", "history"] as const).map((name) => (
           <button

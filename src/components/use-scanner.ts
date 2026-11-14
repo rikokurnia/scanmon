@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { playSound } from "@/lib/sound";
 import type { IScannerControls } from "@zxing/browser";
 import { expandUPCE, validateBarcode } from "@/lib/barcode";
 import { resolveScanResult } from "@/lib/scan-result";
@@ -46,6 +47,7 @@ export function useScanner(active: boolean) {
     if (!valid) return false;
     if (locked.current) return true;
     locked.current = true;
+    playSound("scan-beep");
     recordScan(valid);
     setCode(valid);
     setState("found");

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import GameProvider from "@/components/near/game-provider";
+import SoundRuntime from "@/components/sound-runtime";
 import ScanShell from "@/components/scan-shell";
 import "./globals.css";
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <SoundRuntime />
         <GameProvider
           privyAppId={
             process.env.APP_ID_PRIVY ??

@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { playSoundOnce } from "@/lib/sound";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGame, refreshGame } from "@/lib/near/game-store";
@@ -135,6 +136,11 @@ function PvpContent() {
       try {
         const result = await pollPvp(roomId, account);
         if (cancelled) return;
+        if (result.battle && result.battle.round > 1 && result.battleStartedAt)
+          playSoundOnce(
+            "hit",
+            "pvp:" + result.room.id + ":" + result.battle.round,
+          );
         setMatch(result);
         setClock(Date.now());
         clockSync.current = { server: result.serverNow, local: Date.now() };
@@ -229,6 +235,9 @@ function PvpContent() {
     room?.winner === account;
   const refund =
     match?.certificate?.outcome === "refund" || room?.phase === "cancelled";
+  useEffect(() => {
+    if (won && room) playSoundOnce("victory", "pvp:" + room.id);
+  }, [won, room]);
   function leave() {
     setResumeId(roomId);
     if (account && (room?.phase === "settled" || room?.phase === "cancelled"))

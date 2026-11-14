@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Supplied reveal art and GIFs. */
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { playSound } from "@/lib/sound";
 import { peelGeometry } from "@/lib/peel";
 import Link from "next/link";
 import { CARD_CATALOG, type CardId } from "../collection/card-catalog";
@@ -23,6 +24,7 @@ export default function BossRewardReveal({
   claimed: boolean;
   inVault: boolean;
 }) {
+  const unlockHeard = useRef(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const claimLock = useRef(false);
@@ -58,6 +60,10 @@ export default function BossRewardReveal({
   }, [phase]);
   useEffect(() => {
     if (phase !== "unlock") return;
+    if (!unlockHeard.current) {
+      unlockHeard.current = true;
+      playSound("reveal");
+    }
     const wait = setTimeout(
       () => setPhase("summon"),
       matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900,
@@ -84,6 +90,7 @@ export default function BossRewardReveal({
   }
   function reveal() {
     if (phase !== "mystery") return;
+    playSound("reveal");
     setPhase("peeling");
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setPhase("revealed");

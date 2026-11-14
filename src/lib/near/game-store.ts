@@ -1,4 +1,5 @@
 "use client";
+import { playSound, playSoundOnce } from "@/lib/sound";
 import { useSyncExternalStore } from "react";
 import { GAME_ID, USDC_ID, units, IS_MOCK_USDC } from "./config";
 import {
@@ -303,6 +304,13 @@ function message(error: unknown) {
     : "Unable to reach NEAR. Try again.";
 }
 const storageDeposit = units("0.01", 24);
+function settlementSound(kind: TxKind, title: string, hash: string) {
+  if (
+    ["quest", "loot", "boss", "buy", "sell"].includes(kind) ||
+    (kind === "pvp" && title === "PvP prize claimed")
+  )
+    playSoundOnce("coin", hash);
+}
 export async function transact(
   call: Call,
   kind: TxKind,
@@ -353,6 +361,7 @@ export async function transact(
             ? ["boss_reward"]
             : undefined,
     );
+    settlementSound(kind, title, hash);
     const tx: ChainTx = { ...intent, hash, status: "success" };
     record(tx);
     sessionStorage.removeItem("scanmon:pending-tx");
@@ -416,6 +425,7 @@ export async function recoverRedirect() {
                 ? ["boss_reward"]
                 : undefined,
         );
+        settlementSound(intent.kind, intent.title, hash);
         record({ ...intent, hash, status: "success" });
         publish({
           proof: {
@@ -467,6 +477,7 @@ export async function reconcilePending() {
               ? ["boss_reward"]
               : undefined,
       );
+      settlementSound(tx.kind, tx.title, tx.hash);
       record({ ...tx, status: "success" });
     } catch (error) {
       if (error instanceof SettlementError)
@@ -680,6 +691,7 @@ export async function attack(input: {
       skill_id: input.skillId,
     }),
   );
+  playSound("hit");
 }
 export async function claimBossReward() {
   const session = state.raidSession;

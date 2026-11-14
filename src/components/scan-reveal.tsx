@@ -1,4 +1,5 @@
 "use client";
+import { playSound } from "@/lib/sound";
 import Image from "next/image";
 import {
   useEffect,
@@ -82,6 +83,7 @@ export default function ScanReveal({
   function finish() {
     if (complete.current || !canPeel) return;
     complete.current = true;
+    playSound("reveal");
     setPhase("finishing");
     const box = stage.current!.getBoundingClientRect(),
       from =
