@@ -1,3 +1,8 @@
+/* Cover the exposed navbar corners with the Collection backdrop, never cream. */
+.app-shell:has(.collection-screen) {
+  background: #141b2d;
+}
+
 .blank-main:has(.collection-screen) {
   display: flex;
   flex-direction: column;

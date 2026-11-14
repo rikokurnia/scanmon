@@ -325,8 +325,28 @@ h1 {
   padding: 8px 13px calc(8px + env(safe-area-inset-bottom));
   border-top: var(--outline);
   border-radius: 19px 19px 0 0;
-  background: var(--cream) url("/assets/textures/scanmon-navbar-embossed.png")
-    center center / calc(100% + 24px) calc(100% + 24px) no-repeat;
+  width: 100%;
+  margin-inline: 0;
+  background-color: #dba367;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent calc(25% - 1px),
+      #91552755 calc(25% - 1px),
+      #f8d59b80 25%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 5px,
+      #91552715 6px,
+      #ffe0b329 7px,
+      transparent 9px
+    ),
+    linear-gradient(180deg, #edc38b, #d59a5e);
+  box-shadow:
+    inset 0 2px 0 #ffe3b4,
+    inset 0 -2px 0 #9b632d40;
   flex: none;
 }
 .nav-tab {
