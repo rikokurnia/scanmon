@@ -195,7 +195,7 @@ export function createChainBattleAdapter(): BattleAdapter {
                 state.player?.boss_reward_token
                   ? {
                       status: "granted",
-                      text: "Boss NFT claimed · open Collection to view your vault",
+                      text: "Boss card claimed · open Collection to view your vault",
                     }
                   : undefined,
             }

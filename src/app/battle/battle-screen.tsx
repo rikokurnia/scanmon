@@ -202,7 +202,7 @@ export default function BattleScreen({ view }: { view: View }) {
           <Link
             className="battle-yellow"
             href="/battle/pvp"
-            aria-description="Player battle, three versus three with an NFT stake"
+            aria-description="Player battle, three versus three with a card stake"
           >
             <span className="battle-button-label">Find Match</span>
           </Link>

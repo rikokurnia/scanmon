@@ -659,7 +659,7 @@ export async function attack(input: {
 export async function claimBossReward() {
   const session = state.raidSession;
   if (!session || session.battle.phase !== "won")
-    throw new Error("Defeat the boss before claiming its NFT.");
+    throw new Error("Defeat the boss before claiming its card.");
   assertRaidTeam(session.team.map((card) => card.instanceId));
   const tx = await transact(
     {
@@ -673,7 +673,7 @@ export async function claimBossReward() {
       gas: "250000000000000",
     },
     "boss",
-    "Boss NFT claimed",
+    "Boss card claimed",
     "First-clear collectible · added to your vault",
   );
   // A periodic read may have started before finality; get a fresh vault snapshot.

@@ -28,7 +28,7 @@ export async function enterPvp(
       deposit: units("0.01", 24),
     },
     "pvp",
-    "NFT locked in PvP escrow",
+    "card locked in PvP escrow",
     "Your stake is protected until the match result.",
   );
   await refreshGame();

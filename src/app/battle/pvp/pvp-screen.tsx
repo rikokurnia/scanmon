@@ -281,7 +281,7 @@ function PvpContent() {
                 </span>
               )}
             </div>
-            <p>Your NFT is locked in escrow.</p>
+            <p>Your card is locked in escrow.</p>
             <p>A challenger must lock their own stake before battle starts.</p>
             <button
               className="battle-yellow"
@@ -293,7 +293,7 @@ function PvpContent() {
                 })
               }
             >
-              Cancel & return my NFT
+              Cancel & return my card
             </button>
           </>
         )}
@@ -406,8 +406,8 @@ function PvpContent() {
               {refund
                 ? "Both stakes will be returned."
                 : won
-                  ? "You won @" + enemy?.username + "’s staked NFT."
-                  : "Your staked NFT goes to the winner."}
+                  ? "You won @" + enemy?.username + "’s staked card."
+                  : "Your staked card goes to the winner."}
             </p>
             {match.certificate && (refund || won) && (
               <button
@@ -488,7 +488,7 @@ function PvpContent() {
         </Link>
         <div>
           <h1>Player Battle</h1>
-          <p>3 vs 3 · one NFT stake each</p>
+          <p>3 vs 3 · one card stake each</p>
         </div>
       </div>
       {!account ? (
@@ -545,8 +545,8 @@ function PvpContent() {
             ))}
           </div>
           <p className="pvp-warning">
-            The loser gives their staked NFT to the winner. Both players agree
-            by locking their stake. A disconnect timeout returns both NFTs.
+            The loser gives their staked card to the winner. Both players agree
+            by locking their stake. A disconnect timeout returns both cards.
             Unclaimed escrow can be recovered after 24 hours.
           </p>
           <button
@@ -556,7 +556,7 @@ function PvpContent() {
             }
             onClick={() => void enter()}
           >
-            {busy ? "Locking stake…" : "Lock NFT & create match"}
+            {busy ? "Locking stake…" : "Lock card & create match"}
           </button>
         </>
       )}
@@ -598,7 +598,7 @@ function PvpContent() {
             }
           >
             {recovery.phase === "waiting"
-              ? "Cancel waiting match & return NFT"
+              ? "Cancel waiting match & return card"
               : "Recover escrow after 24h"}
           </button>
         </div>
@@ -647,7 +647,7 @@ function PvpContent() {
                 } else void enter(r.id);
               }}
             >
-              {r.host.account_id === account ? "Open" : "Join & lock NFT"}
+              {r.host.account_id === account ? "Open" : "Join & lock card"}
             </button>
           </div>
         ))}

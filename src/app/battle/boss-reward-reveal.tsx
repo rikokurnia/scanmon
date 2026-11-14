@@ -315,7 +315,7 @@ export default function BossRewardReveal({
               <>
                 <p role="status">
                   {inVault
-                    ? "NFT claimed. Synced to your vault."
+                    ? "card claimed. Synced to your vault."
                     : mode === "pvp"
                       ? "This match reward has already been claimed."
                       : "Your first-clear boss reward has already been claimed."}
@@ -339,8 +339,8 @@ export default function BossRewardReveal({
                   {busy
                     ? "Claiming…"
                     : mode === "pvp"
-                      ? "Claim staked NFT"
-                      : "Claim boss NFT"}
+                      ? "Claim staked card"
+                      : "Claim boss card"}
                 </button>
                 <p>
                   {mode === "pvp"
