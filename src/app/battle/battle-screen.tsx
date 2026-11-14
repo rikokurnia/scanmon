@@ -18,7 +18,7 @@ import "./battle.css";
 
 type View = "menu" | "team" | "arena" | "quick-match";
 function Sprite({ id, className = "" }: { id: string; className?: string }) {
-  id = id === "almarts27-hamster-boss" ? "boss" : id;
+  id = id === "almarts27-hamster-boss" ? "boss-player" : id;
   return (
     <picture className={`battle-sprite ${className}`}>
       <source

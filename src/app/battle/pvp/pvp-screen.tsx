@@ -48,7 +48,7 @@ function Sprite({ id, enemy = false }: { id: CardId; enemy?: boolean }) {
         ? "/assets/battle/boss.gif"
         : "/assets/front-idle/" + id + ".gif"
     : "/assets/battle/" +
-      (id === "almarts27-hamster-boss" ? "boss" : id) +
+      (id === "almarts27-hamster-boss" ? "boss-player" : id) +
       ".gif";
   const still = enemy
     ? id === "doge"
