@@ -38,6 +38,8 @@ export interface MerchantOffer {
   instanceId?: string;
   usdcAmount: string;
   expiresAt?: number;
+  expiresAtSec?: number;
+  signature?: number[];
   status: "active" | "declined" | "expired";
 }
 
@@ -65,6 +67,8 @@ export interface AcceptOfferRequest {
   direction: TradeDirection;
   instanceId?: string;
   usdcAmount: string;
+  expiresAtSec?: number;
+  signature?: number[];
 }
 
 export interface AcceptOfferResult {

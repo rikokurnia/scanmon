@@ -495,6 +495,8 @@ export default function MarketScreen() {
         direction: activeOffer.direction,
         instanceId: selection.instanceId,
         usdcAmount: activeOffer.usdcAmount,
+        expiresAtSec: activeOffer.expiresAtSec,
+        signature: activeOffer.signature,
       });
 
       if (sessionIdRef.current !== reqSession) {

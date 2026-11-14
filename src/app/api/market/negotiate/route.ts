@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { KeyPair } from "near-api-js";
 import { NextResponse } from "next/server";
 import { CARD_CATALOG, isKnownCardId } from "@/app/collection/card-catalog";
 import {
@@ -7,8 +8,31 @@ import {
   type MerchantOffer,
   type TradeDirection,
 } from "@/app/market/market-interface";
+import { GAME_ID, units } from "@/lib/near/config";
 
 export const runtime = "nodejs";
+
+function signKobanOffer(params: {
+  offerId: string;
+  direction: TradeDirection;
+  cardId: string;
+  usdcAmount: string;
+  expiresAtSec: number;
+}): number[] | undefined {
+  const secret = process.env.NEAR_KOBAN_PRIVATE_KEY;
+  if (!secret || !GAME_ID) return undefined;
+  try {
+    const keyPair = KeyPair.fromString(
+      secret as Parameters<typeof KeyPair.fromString>[0],
+    );
+    const amountUnits = units(params.usdcAmount);
+    const msg = `scanmon-koban:v1|${GAME_ID}|${params.offerId}|${params.direction}|${params.cardId}|${amountUnits}|${params.expiresAtSec}`;
+    const signed = keyPair.sign(Buffer.from(msg, "utf8"));
+    return Array.from(signed.signature);
+  } catch {
+    return undefined;
+  }
+}
 
 interface HistoryTurn {
   role: "user" | "koban";
@@ -57,10 +81,11 @@ function buildSystemInstruction(
     "3. Stay warm, playful, and in-character. Do not use markdown, asterisks, or emojis.",
     "4. Always end your output on a new line with EXACTLY this hidden control tag:",
     '<<<OFFER:{"status":"active"|"declined"|"none","usdcAmount":"3.50"}>>>',
-    '- Use status "active" with a positive 2-decimal USDC string (e.g. "3.50") whenever you propose, counter, or agree to a trade price for this card.',
+    '- Use status "active" with a positive 2-decimal USDC string (e.g. "4.00") whenever you propose, counter, or agree to a trade price for this card.',
     '- Use status "declined" (omit usdcAmount or set "") if the player makes an absurdly lowball/unacceptable offer and you refuse without quoting.',
     '- Use status "none" when the player asks a general question or chats without requesting or negotiating a price.',
-    "- Negotiate realistically around the card's base value: meet fair offers halfway, reject insulting pennies ($0.01), and never invent boss cards.",
+    "- Negotiate realistically and dynamically with the player's offer: in Buy mode, if the player offers fair value or higher (e.g. '4 usd' for a ~3.30 card), gladly AGREE to their exact 4.00 USDC price; if slightly low, meet halfway. Reject absurd lowballs (< 1.00 USDC in Buy) or greedy demands (> 15.00 USDC in Sell).",
+    "- CRITICAL: Whenever status is \"active\", the usdcAmount in <<<OFFER:...>>> MUST EXACTLY match the USDC number you state or agree to in your spoken reply (for example if you agree to 4 usd, output usdcAmount \"4.00\").",
   ].join("\n");
 }
 
@@ -380,13 +405,25 @@ export async function POST(request: Request) {
         ) {
           const parsedAmount = parseUsdcAmount(offerPayload.usdcAmount);
           if (parsedAmount !== null) {
+            const offerId = crypto.randomUUID();
+            const usdcAmount = parsedAmount.toFixed(2);
+            const expiresAtSec = Math.floor(Date.now() / 1000) + 180;
+            const signature = signKobanOffer({
+              offerId,
+              direction,
+              cardId,
+              usdcAmount,
+              expiresAtSec,
+            });
             offer = {
-              offerId: crypto.randomUUID(),
+              offerId,
               cardId,
               direction,
               instanceId: body.instanceId,
-              usdcAmount: parsedAmount.toFixed(2),
-              expiresAt: Date.now() + 120_000,
+              usdcAmount,
+              expiresAt: expiresAtSec * 1000,
+              expiresAtSec,
+              signature,
               status: "active",
             };
           }

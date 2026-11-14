@@ -174,6 +174,13 @@ fn species(barcode: &str) -> String {
     ROSTER[hash as usize % ROSTER.len()].into()
 }
 
+fn koban_signer() -> LookupMap<String, Vec<u8>> {
+    LookupMap::new(b"koban:signer:v1".to_vec())
+}
+fn koban_used_offers() -> LookupSet<String> {
+    LookupSet::new(b"koban:used:v1".to_vec())
+}
+
 #[near]
 impl Game {
     #[init]
@@ -291,6 +298,11 @@ impl Game {
     pub fn get_shop(&self) -> Vec<serde_json::Value> {
         SHOP.iter().map(|id|json!({"cardId":id,"stockCount":self.stock(id).len(),"inStock":!self.stock(id).is_empty(),"buy_price":U128(self.price(id,true)),"sell_price":U128(self.price(id,false))})).collect()
     }
+    pub fn configure_koban_signer(&mut self, public_key: Vec<u8>) {
+        require!(env::predecessor_account_id() == self.owner, "Owner only");
+        require!(public_key.len() == 32, "Invalid koban key");
+        koban_signer().insert(&"key".into(), &public_key);
+    }
     pub fn quote(&self, card_id: String, direction: String) -> serde_json::Value {
         require!(SHOP.contains(&card_id.as_str()), "Not tradable");
         require!(
@@ -332,7 +344,23 @@ impl Game {
         };
         if data["action"] == "buy" {
             let card_id = data["card_id"].as_str().unwrap_or("");
-            if !SHOP.contains(&card_id) || amount.0 != self.price(card_id, true) {
+            if !SHOP.contains(&card_id) {
+                return PromiseOrValue::Value(amount);
+            }
+            if let (Some(offer_id), Some(expires_at), Ok(sig)) = (
+                data["offer_id"].as_str(),
+                data["expires_at"].as_u64(),
+                serde_json::from_value::<Vec<u8>>(data["signature"].clone()),
+            ) {
+                if amount.0 < 100_000
+                    || !self.verify_koban_offer(
+                        offer_id, "buy", card_id, amount.0, expires_at, &sig,
+                    )
+                {
+                    return PromiseOrValue::Value(amount);
+                }
+                koban_used_offers().insert(&offer_id.to_string());
+            } else if amount.0 != self.price(card_id, true) {
                 return PromiseOrValue::Value(amount);
             }
             let id = match self.stock(card_id).first() {
@@ -374,15 +402,43 @@ impl Game {
         PromiseOrValue::Value(amount)
     }
     #[payable]
-    pub fn sell_to_koban(&mut self, token_id: String, expected_price: U128) -> Promise {
+    pub fn sell_to_koban(
+        &mut self,
+        token_id: String,
+        expected_price: U128,
+        offer_id: Option<String>,
+        expires_at: Option<u64>,
+        signature: Option<Vec<u8>>,
+    ) -> Promise {
         assert_one_yocto();
         let who = env::predecessor_account_id();
         let card = self.cards.get(&token_id).expect("Unknown card");
         require!(card.owner_id == who, "Not your card");
         require!(SHOP.contains(&card.card_id.as_str()), "Not tradable");
         require!(!self.locks.contains(&token_id), "Card locked in raid");
-        let price = self.price(&card.card_id, false);
-        require!(expected_price.0 == price, "Price changed. Ask again");
+        let price = if let (Some(oid), Some(exp), Some(sig)) = (offer_id, expires_at, signature) {
+            require!(
+                expected_price.0 >= 100_000 && expected_price.0 <= 100 * UNIT,
+                "Negotiated offer out of bounds"
+            );
+            require!(
+                self.verify_koban_offer(
+                    &oid,
+                    "sell",
+                    &card.card_id,
+                    expected_price.0,
+                    exp,
+                    &sig
+                ),
+                "Offer invalid or expired"
+            );
+            koban_used_offers().insert(&oid);
+            expected_price.0
+        } else {
+            let fixed = self.price(&card.card_id, false);
+            require!(expected_price.0 == fixed, "Price changed. Ask again");
+            fixed
+        };
         let treasury = self.koban.clone();
         self.debit(&treasury, price);
         require!(
@@ -1129,6 +1185,44 @@ impl Game {
             price * 75 / 100
         }
     }
+    fn verify_koban_offer(
+        &self,
+        offer_id: &str,
+        direction: &str,
+        card_id: &str,
+        amount: u128,
+        expires_at: u64,
+        signature: &[u8],
+    ) -> bool {
+        if offer_id.is_empty() || offer_id.len() > 96 {
+            return false;
+        }
+        if koban_used_offers().contains(&offer_id.to_string()) {
+            return false;
+        }
+        if expires_at < env::block_timestamp() / 1_000_000_000 {
+            return false;
+        }
+        let Some(raw_key) = koban_signer().get(&"key".into()) else {
+            return false;
+        };
+        let Ok(key): Result<[u8; 32], _> = raw_key.try_into() else {
+            return false;
+        };
+        let Ok(sig): Result<[u8; 64], _> = signature.try_into() else {
+            return false;
+        };
+        let msg = format!(
+            "scanmon-koban:v1|{}|{}|{}|{}|{}|{}",
+            env::current_account_id(),
+            offer_id,
+            direction,
+            card_id,
+            amount,
+            expires_at
+        );
+        env::ed25519_verify(&sig, msg.as_bytes(), &key)
+    }
     fn pay(&mut self, payment: Payment) -> Promise {
         require!(
             self.pending_payments.insert(&payment.receiver),
@@ -1452,5 +1546,74 @@ mod tests {
         ctx("alice.testnet", STORAGE);
         let _ = g.claim_starter();
         let _ = g.claim_starter();
+    }
+    #[test]
+    fn negotiated_buy_and_sell_settle_at_signed_price_and_reject_replay() {
+        use ed25519_dalek::{Signer, SigningKey};
+        let mut g = game();
+        let key = SigningKey::from_bytes(&[7u8; 32]);
+        ctx("owner.testnet", 0);
+        g.configure_koban_signer(key.verifying_key().to_bytes().to_vec());
+        let koban = g.koban.clone();
+        g.mint(&koban, "chill-guy", "");
+        g.add_credit(&koban, 20 * UNIT);
+
+        let buy_amount = 4 * UNIT;
+        let buy_msg = format!(
+            "scanmon-koban:v1|game.testnet|offer-buy-1|buy|chill-guy|{}|9999999",
+            buy_amount
+        );
+        let buy_sig = key.sign(buy_msg.as_bytes()).to_bytes().to_vec();
+        ctx("usdc.testnet", 0);
+        let refund = g.ft_on_transfer(
+            account("alice.testnet"),
+            U128(buy_amount),
+            json!({
+                "action": "buy",
+                "card_id": "chill-guy",
+                "offer_id": "offer-buy-1",
+                "expires_at": 9999999u64,
+                "signature": buy_sig.clone(),
+            })
+            .to_string(),
+        );
+        assert!(matches!(refund, PromiseOrValue::Value(U128(0))));
+        let alice_cards = g.owned.get(&account("alice.testnet")).unwrap();
+        assert_eq!(alice_cards.len(), 1);
+        assert_eq!(g.credit(&koban), 24 * UNIT);
+
+        // Replay of the same offer_id is rejected and refunded.
+        g.mint(&koban, "chill-guy", "");
+        let replay = g.ft_on_transfer(
+            account("alice.testnet"),
+            U128(buy_amount),
+            json!({
+                "action": "buy",
+                "card_id": "chill-guy",
+                "offer_id": "offer-buy-1",
+                "expires_at": 9999999u64,
+                "signature": buy_sig,
+            })
+            .to_string(),
+        );
+        assert!(matches!(replay, PromiseOrValue::Value(U128(v)) if v == buy_amount));
+
+        // Negotiated sell at signed price (3.20 USDC) debits exact negotiated price.
+        let token_id = alice_cards[0].clone();
+        let sell_amount = 3_200_000u128;
+        let sell_msg = format!(
+            "scanmon-koban:v1|game.testnet|offer-sell-1|sell|chill-guy|{}|9999999",
+            sell_amount
+        );
+        let sell_sig = key.sign(sell_msg.as_bytes()).to_bytes().to_vec();
+        ctx("alice.testnet", 1);
+        let _ = g.sell_to_koban(
+            token_id,
+            U128(sell_amount),
+            Some("offer-sell-1".into()),
+            Some(9999999),
+            Some(sell_sig),
+        );
+        assert_eq!(g.credit(&koban), 24 * UNIT - sell_amount);
     }
 }

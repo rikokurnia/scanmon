@@ -18,7 +18,7 @@ import {
   attack,
   claimBossReward,
 } from "./game-store";
-import { GAME_ID, displayUnits } from "./config";
+import { GAME_ID, units } from "./config";
 import { view } from "./rpc";
 export function createChainMarketAdapter(): MarketAdapter {
   const merchant = createKobanMarketAdapter();
@@ -104,27 +104,33 @@ export function createChainMarketAdapter(): MarketAdapter {
         };
       }
 
-      if (quote && !quote.available) {
-        return {
-          reply:
-            request.direction === "buy"
-              ? "Sold out for now. Check back after another hunter trades!"
-              : "Buying paused: my USDC budget is reserved or exhausted.",
-          offer: null,
-          status: "declined",
-          offerIntent: "declined",
-        };
+      if (quote) {
+        if (request.direction === "buy" && quote.stock <= 0) {
+          return {
+            reply: "Sold out for now. Check back after another hunter trades!",
+            offer: null,
+            status: "declined",
+            offerIntent: "declined",
+          };
+        }
+        if (request.direction === "sell") {
+          const budget = BigInt(gameSnapshot().config?.koban_budget ?? "0");
+          const offerUnits = response.offer?.usdcAmount
+            ? BigInt(units(response.offer.usdcAmount))
+            : BigInt(0);
+          if (!quote.available || (offerUnits > BigInt(0) && budget < offerUnits)) {
+            return {
+              reply: "My USDC budget is too low for that offer right now, pal.",
+              offer: null,
+              status: "declined",
+              offerIntent: "declined",
+            };
+          }
+        }
       }
 
-      // Preserve Koban's real-time LLM reply while anchoring official settlement
-      // to the contract's exact USDC price when a deal is active.
-      const contractAmount = quote
-        ? BigInt(quote.amount || "0") % BigInt(10_000) === BigInt(0)
-          ? displayUnits(quote.amount, 6, 2)
-          : displayUnits(quote.amount, 6, 6).replace(/\.?0+$/, "")
-        : response.offer?.usdcAmount;
-
-      if (!contractAmount) {
+      // Always keep Koban's real-time negotiated price and reply from the conversation.
+      if (!response.offer) {
         return {
           ...response,
           offer: null,
@@ -136,22 +142,29 @@ export function createChainMarketAdapter(): MarketAdapter {
         status: "ok",
         offerIntent: "active",
         offer: {
-          offerId: response.offer?.offerId ?? crypto.randomUUID(),
+          ...response.offer,
           cardId: request.cardId,
           direction: request.direction,
           instanceId: request.instanceId,
-          usdcAmount: contractAmount,
-          expiresAt: Date.now() + 120_000,
           status: "active",
         },
       };
     },
     async acceptOffer(request) {
+      const signedOffer =
+        request.expiresAtSec && request.signature
+          ? {
+              offerId: request.offerId,
+              expiresAtSec: request.expiresAtSec,
+              signature: request.signature,
+            }
+          : undefined;
       const tx = await trade(
         request.direction,
         request.cardId,
         request.usdcAmount,
         request.instanceId,
+        signedOffer,
       );
       return {
         success: true,

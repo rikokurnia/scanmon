@@ -1,0 +1,15 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "upgradedAt": "2026-11-14T08:05:30.416Z",
+  "receipts": [
+    {
+      "step": "Upgrade game: signed real-time Koban offer settlement",
+      "hash": "AQhGHTRvnakcH4SU5xgpDd11tDBVvt7znc4pRHQA8rKw"
+    },
+    {
+      "step": "Configure Koban Ed25519 offer signer",
+      "hash": "HgqbV8XE5RUTEBK7woSvZL9fpbk3UGJ852tji2JxfD8N"
+    }
+  ]
+}

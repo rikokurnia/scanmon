@@ -564,11 +564,18 @@ export async function claimLoot() {
     "+2 USDC · +10 Shards · one payout per day",
   );
 }
+export interface SignedKobanOffer {
+  offerId: string;
+  expiresAtSec: number;
+  signature: number[];
+}
+
 export async function trade(
   direction: "buy" | "sell",
   cardId: string,
   amount: string,
   tokenId?: string,
+  signedOffer?: SignedKobanOffer,
 ) {
   await registerUsdc();
   if (direction === "buy")
@@ -579,7 +586,17 @@ export async function trade(
         args: {
           receiver_id: GAME_ID,
           amount: units(amount),
-          msg: JSON.stringify({ action: "buy", card_id: cardId }),
+          msg: JSON.stringify(
+            signedOffer
+              ? {
+                  action: "buy",
+                  card_id: cardId,
+                  offer_id: signedOffer.offerId,
+                  expires_at: signedOffer.expiresAtSec,
+                  signature: signedOffer.signature,
+                }
+              : { action: "buy", card_id: cardId },
+          ),
         },
         gas: "250000000000000",
       },
@@ -591,7 +608,15 @@ export async function trade(
     {
       receiverId: GAME_ID,
       methodName: "sell_to_koban",
-      args: { token_id: tokenId, expected_price: units(amount) },
+      args: signedOffer
+        ? {
+            token_id: tokenId,
+            expected_price: units(amount),
+            offer_id: signedOffer.offerId,
+            expires_at: signedOffer.expiresAtSec,
+            signature: signedOffer.signature,
+          }
+        : { token_id: tokenId, expected_price: units(amount) },
     },
     "sell",
     "Koban trade receipt",
