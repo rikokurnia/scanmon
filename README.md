@@ -11,7 +11,7 @@ A mobile browser game where product barcodes become collectible monsters, NPCs t
 [![Track Games](https://img.shields.io/badge/Track-Games_With_Real_Economies-FFD34E?style=flat-square)](https://github.com/nearai/near-hackathon-prompt-examples/blob/main/tracks/09-games.md)
 [![Items NEP-245](https://img.shields.io/badge/Items-NEP--245-B7E3FF?style=flat-square)](smartcontract/game/src/lib.rs)
 
-[Play scanMon](https://scannmon.vercel.app) · [Judge walkthrough](#judge-walkthrough) · [PvP](#3-vs-3-pvp--stake-a-card-win-a-card) · [On-chain proof](#on-chain-proof) · [Run locally](#installation--setup)
+[Play scanMon](https://scannmon.vercel.app) · [Video Demo on X](https://x.com/rkokrnia1/status/2121745696537862504) · [Judge walkthrough](#judge-walkthrough) · [PvP](#3-vs-3-pvp--stake-a-card-win-a-card) · [On-chain proof](#on-chain-proof) · [Run locally](#installation--setup)
 
 </div>
 
@@ -263,6 +263,7 @@ The latest local application verification completed **44 tests**, lint, TypeScri
 ## Live demo & supporting references
 
 - [Play scanMon](https://scannmon.vercel.app)
+- [Video demo on X](https://x.com/rkokrnia1/status/2121745696537862504)
 - [Source repository](https://github.com/rikokurnia/scanmon)
 - [Games With Real Economies — track brief](https://github.com/nearai/near-hackathon-prompt-examples/blob/main/tracks/09-games.md)
 - [NEP-245 multi-token standard](https://github.com/near/NEPs/blob/master/neps/nep-0245.md)
