@@ -243,6 +243,15 @@
   margin-bottom: 10px;
 }
 
+.market-picker-toolbar {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
 .market-title {
   margin: 0;
   font-family: "Baloo 2", "Nunito", sans-serif;
@@ -861,9 +870,10 @@
 /* Rounded lime-green (!) About Koban trigger */
 .koban-about-trigger {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 7;
+  top: 0;
+  bottom: 0;
+  margin-block: auto;
+  z-index: 3;
   pointer-events: auto;
   width: 38px;
   height: 38px;
@@ -882,6 +892,14 @@
     0 3px 0 var(--market-navy),
     0 4px 10px rgba(15, 7, 2, 0.35);
   cursor: pointer;
+}
+
+.koban-about-trigger.is-left {
+  left: 0;
+}
+
+.koban-about-trigger.is-right {
+  right: 0;
 }
 
 .koban-about-trigger:focus-visible {

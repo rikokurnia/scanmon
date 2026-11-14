@@ -605,18 +605,6 @@ export default function MarketScreen() {
         </div>
 
         <div className="market-upper">
-          <motion.button
-            ref={aboutTriggerRef}
-            type="button"
-            className="koban-about-trigger"
-            aria-label="About Koban"
-            aria-expanded={aboutOpen}
-            aria-haspopup="dialog"
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setAboutOpen((open) => !open)}
-          >
-            <span aria-hidden="true">!</span>
-          </motion.button>
           <AnimatePresence mode="wait">
             {selection && selectedCardAsset && (
               <motion.div
@@ -673,7 +661,21 @@ export default function MarketScreen() {
             <>
               <div className="market-picker-header">
                 <h1 className="market-title">Market</h1>
-                {renderDirectionToggle()}
+                <div className="market-picker-toolbar">
+                  <motion.button
+                    ref={aboutTriggerRef}
+                    type="button"
+                    className="koban-about-trigger is-left"
+                    aria-label="About Koban"
+                    aria-expanded={aboutOpen}
+                    aria-haspopup="dialog"
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => setAboutOpen((open) => !open)}
+                  >
+                    <span aria-hidden="true">!</span>
+                  </motion.button>
+                  {renderDirectionToggle()}
+                </div>
               </div>
 
               {snapshot.error && (
@@ -844,6 +846,18 @@ export default function MarketScreen() {
                   </span>
                 </button>
                 {renderDirectionToggle()}
+                <motion.button
+                  ref={aboutTriggerRef}
+                  type="button"
+                  className="koban-about-trigger is-right"
+                  aria-label="About Koban"
+                  aria-expanded={aboutOpen}
+                  aria-haspopup="dialog"
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => setAboutOpen((open) => !open)}
+                >
+                  <span aria-hidden="true">!</span>
+                </motion.button>
               </div>
 
               <div className="negotiation-stage">
