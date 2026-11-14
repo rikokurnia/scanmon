@@ -218,12 +218,12 @@ export const CARD_BACK_META: Record<CardId, CardBackMeta> = {
 export function formatContractShort(contractId: string): string {
   const trimmed = contractId.trim();
   if (!trimmed) return "cards...near";
-  if (trimmed.length <= 18) return trimmed;
+  if (trimmed.length <= 20) return trimmed;
   const dotIdx = trimmed.lastIndexOf(".");
-  if (dotIdx > 0) {
-    const suffix = trimmed.slice(dotIdx + 1);
-    const prefix = trimmed.slice(0, Math.min(7, dotIdx));
-    return `${prefix}...${suffix}`;
+  if (dotIdx > 10) {
+    const prefix = trimmed.slice(0, 6);
+    const tail = trimmed.slice(dotIdx - 4);
+    return `${prefix}...${tail}`;
   }
   return `${trimmed.slice(0, 8)}...${trimmed.slice(-5)}`;
 }
