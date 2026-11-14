@@ -17,6 +17,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { TokenIcon } from "@/components/tomo-companion";
+import { displayUnits, explorerAccount, GAME_ID } from "@/lib/near/config";
+import { useGame } from "@/lib/near/game-store";
 import type { CardId } from "../collection/card-catalog";
 import { createKobanMarketAdapter } from "./koban-market-adapter";
 import {
@@ -128,8 +131,10 @@ export default function MarketScreen() {
     getAdapterSnapshot,
     () => EMPTY_MARKET_SNAPSHOT,
   );
+  const game = useGame();
   const shouldReduceMotion = useReducedMotion();
 
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [direction, setDirection] = useState<TradeDirection>("buy");
   const [selection, setSelection] = useState<SelectedTradeCard | null>(null);
 
@@ -154,9 +159,22 @@ export default function MarketScreen() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const composerFormRef = useRef<HTMLFormElement>(null);
+  const aboutTriggerRef = useRef<HTMLButtonElement>(null);
   const sessionIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const acceptLockRef = useRef(false);
+
+  useEffect(() => {
+    if (!aboutOpen) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAboutOpen(false);
+        aboutTriggerRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [aboutOpen]);
 
   // Respect prefers-reduced-motion on the shop video element.
   useEffect(() => {
@@ -587,6 +605,18 @@ export default function MarketScreen() {
         </div>
 
         <div className="market-upper">
+          <motion.button
+            ref={aboutTriggerRef}
+            type="button"
+            className="koban-about-trigger"
+            aria-label="About Koban"
+            aria-expanded={aboutOpen}
+            aria-haspopup="dialog"
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setAboutOpen((open) => !open)}
+          >
+            <span aria-hidden="true">!</span>
+          </motion.button>
           <AnimatePresence mode="wait">
             {selection && selectedCardAsset && (
               <motion.div
@@ -974,6 +1004,179 @@ export default function MarketScreen() {
             </div>
           )}
         </div>
+
+        <AnimatePresence>
+          {aboutOpen && (
+            <motion.div
+              className="koban-about-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                  setAboutOpen(false);
+                  aboutTriggerRef.current?.focus();
+                }
+              }}
+            >
+              <motion.section
+                className="koban-about-board"
+                role="dialog"
+                aria-modal="true"
+                aria-label="About Koban"
+                initial={{ opacity: 0, y: 12, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 360, damping: 26 }}
+              >
+                <div className="koban-about-head">
+                  <span className="koban-about-tab">About</span>
+                  <button
+                    type="button"
+                    className="koban-about-close"
+                    aria-label="Close Koban info"
+                    onClick={() => {
+                      setAboutOpen(false);
+                      aboutTriggerRef.current?.focus();
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="tomo-bio">
+                  <span className="tomo-bio-icon">
+                    <TokenIcon token="near" />
+                  </span>
+                  <div>
+                    <h3>Meet Koban</h3>
+                    <p>Your woodland NEAR shopkeeper.</p>
+                  </div>
+                  <span className="agent-status">
+                    {game.config ? "On NEAR" : "Connecting…"}
+                  </span>
+                </div>
+
+                <div className="agent-balances">
+                  <section className="agent-balance">
+                    <div>
+                      <TokenIcon token="usdc" />
+                      <span>Agent balance</span>
+                      <strong>
+                        {game.config
+                          ? displayUnits(game.config.koban_budget)
+                          : "—"}{" "}
+                        <small>USDC</small>
+                      </strong>
+                    </div>
+                    <div
+                      className="balance-track"
+                      role="img"
+                      aria-label="Koban USDC budget read from the game contract"
+                    >
+                      <span
+                        style={{
+                          width: `${
+                            game.config &&
+                            BigInt(game.config.koban_budget) > BigInt(0)
+                              ? Math.min(
+                                  100,
+                                  Math.max(
+                                    10,
+                                    Number(
+                                      (BigInt(game.config.koban_budget) *
+                                        BigInt(100)) /
+                                        BigInt(500_000_000),
+                                    ),
+                                  ),
+                                )
+                              : 0
+                          }%`,
+                        }}
+                      />
+                    </div>
+                    <p>
+                      {game.config &&
+                      BigInt(game.config.koban_budget) > BigInt(0)
+                        ? "Finite USDC budget deposited on-chain."
+                        : "Buybacks pause when the budget is empty."}
+                    </p>
+                  </section>
+
+                  <section className="agent-balance">
+                    <div>
+                      <TokenIcon token="usdc" />
+                      <span>Shop inventory</span>
+                      <strong>
+                        {game.shop.reduce((sum, s) => sum + s.stockCount, 0)}{" "}
+                        <small>cards</small>
+                      </strong>
+                    </div>
+                    <div
+                      className="balance-track distributed"
+                      role="img"
+                      aria-label="Koban card stock read from the game contract"
+                    >
+                      <span
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(
+                              (game.shop.filter((s) => s.inStock).length / 8) *
+                                100,
+                            ),
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                    <p>
+                      {game.shop.filter((s) => s.inStock).length} of 8 standard
+                      card types in stock.
+                    </p>
+                  </section>
+                </div>
+
+                <div className="agent-contract">
+                  <TokenIcon token="near" />
+                  <div>
+                    <h4>Agent account · NEAR</h4>
+                    <p>
+                      {game.config ? (
+                        <a
+                          href={explorerAccount(game.config.koban_account_id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {game.config.koban_account_id} ↗
+                        </a>
+                      ) : (
+                        "Reading contract…"
+                      )}
+                    </p>
+                  </div>
+                  <span aria-hidden="true">↗</span>
+                </div>
+
+                <p className="agent-explainer">
+                  Koban buys and sells standard scanMon cards from a limited
+                  USDC balance. Every accepted deal settles on NEAR.
+                </p>
+
+                <p className="preview-notice">
+                  <a
+                    href={explorerAccount(GAME_ID)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Game contract ↗
+                  </a>{" "}
+                  · NEAR testnet
+                </p>
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
     </MotionConfig>
   );
