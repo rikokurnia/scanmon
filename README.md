@@ -271,3 +271,7 @@ The latest local application verification completed **44 tests**, lint, TypeScri
 - [PvP integration, trust model and recovery](src/app/battle/pvp/INTEGRATION.md)
 - [Integration validation report](docs/integration-validation.md)
 - [Deployment and environment reference](docs/vercel-deployment.md)
+
+## License
+
+Original scanMon source code is available under the [MIT License](LICENSE). Third-party dependencies, character artwork, logos and trademarks retain their respective licenses and rights; the MIT license does not grant rights to third-party material.
