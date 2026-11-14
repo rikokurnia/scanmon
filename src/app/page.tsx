@@ -1,5 +1,5 @@
 import LandingPage from "@/components/landing-page";
-import deployment from "../../smartcontract/deployments/testnet.json";
+import deployment from "@/lib/near/public-deployment.json";
 
 export default function Page() {
   return (

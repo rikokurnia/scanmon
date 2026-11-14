@@ -1,0 +1,7 @@
+{
+  "network": "testnet",
+  "contractId": "scanmon-6f49a2b600.testnet",
+  "usdcContractId": "usdc.scanmon-6f49a2b600.testnet",
+  "tomoAccountId": "tomo.scanmon-6f49a2b600.testnet",
+  "kobanAccountId": "koban.scanmon-6f49a2b600.testnet"
+}

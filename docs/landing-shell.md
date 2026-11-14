@@ -36,3 +36,7 @@ The guide matches the current reward button, **Claim boss card**, rather than th
 ## Limits
 
 No separate current-desktop screenshot attachment was accessible in the workspace; the existing running desktop app and both named references were inspected. No wallet login, signed transaction, real camera, speaker/listening, or physical iOS safe-area test was performed. Authentication and transaction handlers were preserved. No deployment was requested or performed.
+
+## Vercel build boundary
+
+`.vercelignore` excludes `smartcontract/`. Landing defaults therefore import `src/lib/near/public-deployment.json`, a public-account-only snapshot of `smartcontract/deployments/testnet.json`. Update this snapshot when redeploying contracts; runtime environment values still take priority. No signing keys or deployment tooling are included.
