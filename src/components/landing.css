@@ -1,0 +1,420 @@
+@import "@fontsource/young-serif/400.css";
+@import "@fontsource/cinzel/600.css";
+@import "@fontsource/cinzel/700.css";
+
+/* Colors and optical offsets follow the supplied woodland artwork. */
+.forest-landing {
+  --forest-ivory: #f5e5c5;
+  --forest-mint: #8be3a0;
+  --forest-gold: #d6b76e;
+  min-height: 100svh;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  color: var(--forest-ivory);
+  /* Dim only the artwork, keeping live controls and lettering crisp. */
+  background: linear-gradient(rgb(0 0 0 / 50%), rgb(0 0 0 / 50%)),
+    #102327 url("/assets/landing/landing-background.png") center / cover no-repeat;
+}
+.landing-composition {
+  position: absolute;
+  inset: 0;
+}
+.woodland-title {
+  position: absolute;
+  top: 13%;
+  left: 6.8%;
+  text-align: center;
+  isolation: isolate;
+}
+.woodland-title::before {
+  content: "";
+  position: absolute;
+  inset: -30% -14%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 32% 50%, #edc66a55, transparent 60%),
+    radial-gradient(ellipse at 72% 45%, #6fe8ab65, transparent 65%);
+  filter: blur(18px);
+  opacity: 0.8;
+}
+.woodland-title p {
+  font:
+    700 clamp(11px, 1.75vw, 26px)/1.4 "Cinzel",
+    serif;
+  letter-spacing: 0.16em;
+  margin: 0;
+  text-shadow:
+    0 2px 4px #000,
+    0 0 16px #000;
+}
+.woodland-title h1 {
+  font:
+    400 clamp(52px, 8.8vw, 150px)/1.04 "Young Serif",
+    serif;
+  letter-spacing: -0.065em;
+  margin: 0 0 4px;
+  text-shadow:
+    0 4px 3px #061916,
+    0 0 24px #071b1cc9;
+}
+.woodland-title h1 span {
+  color: var(--forest-mint);
+}
+.landing-menu {
+  position: absolute;
+  top: 24%;
+  right: 2.3%;
+  width: 24%;
+  display: grid;
+  gap: clamp(12px, 2.1vh, 24px);
+}
+.forest-plaque {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 5.5;
+  min-height: 44px;
+  border: 0;
+  padding: 4px 24px;
+  background: none;
+  color: var(--forest-ivory);
+  font:
+    600 clamp(13px, 1.9vw, 28px)/1.2 "Cinzel",
+    serif;
+  text-shadow: 0 2px 3px #000;
+  isolation: isolate;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
+}
+/* Original 1920×1080 image has artwork only at x90–1830, y420–656.
+   Crop its transparent padding in CSS so layout and hit targets fit the plaque. */
+.forest-plaque::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: url("/assets/landing/menu-plaque.png") center 50% / 110.4% 457%
+    no-repeat;
+}
+.forest-plaque::after {
+  content: "";
+  position: absolute;
+  inset: 6% 0;
+  z-index: -1;
+  clip-path: polygon(0 50%, 10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%);
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    #e8c87528 48%,
+    transparent 65%
+  );
+  background-size: 260% 100%;
+  opacity: 0.65;
+  pointer-events: none;
+}
+.forest-plaque:hover {
+  filter: brightness(1.15);
+}
+.forest-plaque:active {
+  transform: translateY(3px) scale(0.97);
+  filter: brightness(1.4);
+}
+.forest-landing :is(button, a, [tabindex]):focus-visible {
+  outline: 3px solid var(--forest-gold);
+  outline-offset: 5px;
+}
+.landing-sound {
+  position: absolute;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid #d6b76e70;
+  border-radius: 24px;
+  background: #10201ed9;
+  color: var(--forest-ivory);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+.landing-sound > span {
+  font-size: 22px;
+}
+.woodland-dialog {
+  --forest-gold: #d6b76e;
+  --forest-ivory: #f5e5c5;
+  color: var(--forest-ivory);
+  width: min(1000px, calc(100vw - 40px));
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  border: 2px solid #ad8950;
+  border-radius: 16px;
+  background:
+    repeating-linear-gradient(
+      3deg,
+      transparent 0 5px,
+      #be8a5010 6px,
+      #07030122 8px,
+      transparent 10px
+    ),
+    linear-gradient(110deg, #302016, #422b1e 50%, #291c15);
+  box-shadow:
+    inset 0 0 0 5px #1e140ec9,
+    inset 0 0 0 6px #a47a4544,
+    0 24px 90px #000b;
+}
+.woodland-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.woodland-dialog::backdrop {
+  background: #030d10b8;
+  backdrop-filter: blur(3px);
+}
+.woodland-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding: 24px 32px 16px;
+  border-bottom: 1px solid #d6b76e40;
+}
+.woodland-kicker {
+  font:
+    600 10px/1.4 "Cinzel",
+    serif;
+  letter-spacing: 0.18em;
+  margin: 0 0 6px;
+  color: #dec387;
+}
+.woodland-dialog h2 {
+  font:
+    600 clamp(23px, 3vw, 32px)/1.2 "Cinzel",
+    serif;
+  margin: 0;
+}
+.woodland-close {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid #b59458;
+  background: #20150f;
+  color: #f5e5c5;
+  border-radius: 50%;
+  font-size: 28px;
+}
+.woodland-close:active {
+  transform: scale(0.93);
+  background: #644725;
+}
+.woodland-dialog-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 32px 28px;
+  scrollbar-color: #ad8950 #291c15;
+}
+.field-guide {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.field-guide li {
+  display: flex;
+  align-items: start;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #160e0a55;
+  border: 1px solid #c99a4a30;
+  border-radius: 8px;
+}
+.field-guide img {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.field-guide h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #ffe2a1;
+}
+.field-guide p,
+.about-forest p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.about-forest h3 {
+  font:
+    600 20px "Cinzel",
+    serif;
+  margin: 24px 0 12px;
+  color: #ffe2a1;
+}
+.about-forest .network-note {
+  margin-top: 16px;
+  color: #e4cc9a;
+}
+.deployed-accounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.deployed-accounts article {
+  padding: 16px;
+  border: 1px solid #c99a4a40;
+  background: #160e0a55;
+  border-radius: 8px;
+  min-width: 0;
+}
+.account-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.account-heading h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.account-heading span {
+  font-size: 11px;
+  color: #e4cc9a;
+}
+.deployed-accounts a {
+  display: inline-block;
+  min-height: 40px;
+  padding-block: 8px;
+  font-size: 12px;
+  color: #a7ebbe;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.deployed-accounts article p {
+  font-size: 13px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .woodland-title::before {
+    animation: woodland-breath 6s ease-in-out infinite;
+  }
+  .forest-plaque::after {
+    animation: antique-glint 7s ease-in-out infinite;
+  }
+  .forest-plaque:nth-child(2)::after {
+    animation-delay: 1s;
+  }
+  .forest-plaque:nth-child(3)::after {
+    animation-delay: 2s;
+  }
+  @keyframes woodland-breath {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(0.94);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+  @keyframes antique-glint {
+    0%,
+    20% {
+      background-position: 130% 0;
+    }
+    75%,
+    100% {
+      background-position: -30% 0;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .forest-plaque {
+    transition: none;
+  }
+  .forest-plaque::after {
+    background-position: 50% 0;
+  }
+}
+@media (max-aspect-ratio: 1/1) {
+  .forest-landing {
+    background-position: 38% center;
+  }
+  .forest-landing::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(#071b1b55, transparent 45%, #071b1b80);
+  }
+  .woodland-title {
+    top: 10%;
+    left: 5%;
+    right: 5%;
+  }
+  .woodland-title h1 {
+    font-size: clamp(58px, 15vw, 110px);
+  }
+  .woodland-title p {
+    font-size: clamp(11px, 2.9vw, 20px);
+  }
+  .landing-menu {
+    top: auto;
+    bottom: 14%;
+    right: 15%;
+    width: 70%;
+    gap: 16px;
+  }
+  .forest-plaque {
+    font-size: clamp(16px, 4vw, 24px);
+    min-height: 52px;
+  }
+}
+@media (max-width: 600px) {
+  .woodland-dialog {
+    width: calc(100vw - 24px);
+    height: min(720px, calc(100dvh - 24px));
+    max-height: calc(100dvh - 24px);
+    aspect-ratio: auto;
+  }
+  .woodland-dialog-header {
+    padding: 20px 20px 16px;
+  }
+  .woodland-dialog-scroll {
+    padding: 16px 16px 24px;
+  }
+  .field-guide li {
+    gap: 10px;
+    padding: 12px;
+  }
+  .field-guide img {
+    flex-basis: 36px;
+    width: 36px;
+    height: 40px;
+  }
+  .deployed-accounts {
+    grid-template-columns: 1fr;
+  }
+}

@@ -574,7 +574,7 @@ export default function CollectionScreen({
           <p className="collection-state-copy">
             Scan a barcode to collect your first monster card.
           </p>
-          <Link href="/" className="collection-state-cta">
+          <Link href="/scan" className="collection-state-cta">
             Scan barcode
           </Link>
         </div>

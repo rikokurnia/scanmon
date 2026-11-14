@@ -9,7 +9,7 @@ import BattleTaskSync from "./battle-task-sync";
 import ScanReveal from "./scan-reveal";
 import TomoCompanion from "./tomo-companion";
 const tabs = [
-  ["Scan", "/", "scan"],
+  ["Scan", "/scan", "scan"],
   ["Collection", "/collection", "collection"],
   ["Battle", "/battle", "battle"],
   ["Market", "/market", "market"],
@@ -58,13 +58,22 @@ export default function ScanShell({
   googleEnabled: boolean;
 }) {
   const path = usePathname();
+  if (path === "/") return <>{children}</>;
   return (
-    <>
+    <div className="game-dashboard">
+      <Link href="/" className="dashboard-brand" aria-label="scanMon home">
+        <Art name="logo-scanmon" size={56} />
+        <span className="logo-caption">
+          scan<span>Mon</span>
+        </span>
+      </Link>
       <BattleTaskSync />
-      <ShellContent key={path} path={path} googleEnabled={googleEnabled}>
-        {children}
-      </ShellContent>
-    </>
+      <div className="device-frame">
+        <ShellContent key={path} path={path} googleEnabled={googleEnabled}>
+          {children}
+        </ShellContent>
+      </div>
+    </div>
   );
 }
 function ShellContent({
@@ -76,7 +85,7 @@ function ShellContent({
   path: string;
   googleEnabled: boolean;
 }) {
-  const isScan = path === "/" || path === "/scan";
+  const isScan = path === "/scan";
   const { video, state, code, message, start, resume, result } =
     useScanner(isScan);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -86,7 +95,7 @@ function ShellContent({
   return (
     <div className={`app-shell ${isScan ? "is-scan" : ""}`}>
       <header className="app-header">
-        <Link href="/" className="brand" aria-label="scanMon home">
+        <Link href="/scan" className="brand" aria-label="scanMon home">
           <Art name="logo-scanmon" size={52} />
           <span className="logo-caption" aria-hidden="true">
             scan<span>Mon</span>
@@ -248,7 +257,7 @@ function ShellContent({
       <nav className="bottom-nav" aria-label="Main navigation">
         {tabs.map(([label, href, asset]) => {
           const selected =
-            href === "/"
+            href === "/scan"
               ? isScan
               : path === href || path.startsWith(`${href}/`);
           return (

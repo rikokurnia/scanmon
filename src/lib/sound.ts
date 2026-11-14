@@ -160,6 +160,7 @@ export function installSound() {
   notify();
   const gesture = () => unlockSound();
   const click = (event: MouseEvent) => {
+    unlockSound();
     const target = event.target instanceof Element ? event.target : null;
     const control = target?.closest(
       'button, a[href], [role="button"], [role="tab"], summary',
